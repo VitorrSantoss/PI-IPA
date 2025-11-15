@@ -17,6 +17,8 @@ import Beneficiarios from "./pages/Beneficiarios";
 import Sustentabilidade from "./pages/Sustentabilidade";
 import Ajuda from "./pages/Ajuda";
 import NotFound from "./pages/NotFound";
+import TesteUsuarios from "./pages/TesteUsuarios"; // ✅ NOVA IMPORTAÇÃO
+
 
 const queryClient = new QueryClient();
 
@@ -40,8 +42,10 @@ const App = () => (
           <Route path="/projeto/beneficiarios" element={<Beneficiarios />} />
           <Route path="/sustentabilidade" element={<Sustentabilidade />} />
           <Route path="/ajuda" element={<Ajuda />} />
+          <Route path="/teste-usuarios" element={<TesteUsuarios />} /> {/* ✅ NOVA ROTA */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
+          <Route path="/teste-usuarios" element={<TesteUsuarios />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
