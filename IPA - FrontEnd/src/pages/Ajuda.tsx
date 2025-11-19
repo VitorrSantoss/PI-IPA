@@ -28,13 +28,7 @@ const Ajuda = () => {
         <div className="max-w-7xl mx-auto px-6">
           <nav className="flex gap-8 py-4">
             <Link to="/ajuda" className="font-semibold text-primary border-b-2 border-primary pb-1">
-              Sobre o projeto
-            </Link>
-            <Link to="/ajuda/beneficiarios" className="text-muted-foreground hover:text-primary">
-              Beneficiários
-            </Link>
-            <Link to="/ajuda/quem-ajudar" className="text-muted-foreground hover:text-primary">
-              Quem pode ajudar a receber
+              Perguntas Frequentes
             </Link>
           </nav>
         </div>
@@ -120,11 +114,7 @@ const Ajuda = () => {
                   </div>
                 </div>
 
-                <div className="mt-8 text-center">
-                  <Button className="bg-primary hover:bg-accent">
-                    Quero Colaborar com o S.A.F.R.A.
-                  </Button>
-                </div>
+                
               </div>
             </div>
 
@@ -195,11 +185,7 @@ const Ajuda = () => {
                   </div>
                 </div>
 
-                <div className="mt-8 text-center">
-                  <Button className="bg-primary hover:bg-accent">
-                    Acessar o Sistema S.A.F.R.A.
-                  </Button>
-                </div>
+                
               </div>
             </div>
           </div>

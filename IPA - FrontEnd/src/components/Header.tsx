@@ -28,9 +28,6 @@ const Header = () => {
           <Link to="/projeto/beneficiarios" className="hover:text-primary transition-colors">
             Parceiros
           </Link>
-          <Link to="/teste-usuarios" className="hover:text-primary transition-colors">
-            🧪 Teste Usuários
-          </Link>
         </nav>
 
         <div className="flex items-center gap-4">
