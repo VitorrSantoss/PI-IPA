@@ -1,6 +1,7 @@
 package com.ipa.backend.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,6 +26,7 @@ public class Usuario {
     @Column(length = 20)
     private String telefone;
 
+    @Email
     @Column(unique = true)
     private String email;
 
