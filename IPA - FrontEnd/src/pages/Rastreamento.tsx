@@ -19,6 +19,7 @@ const Rastreamento = () => {
     const params = new URLSearchParams(window.location.search);
     const codigo = params.get('codigo');
     if (codigo) {
+      setCodigoBusca(codigo);
       buscarPedido(codigo);
     }
   }, []);
@@ -29,13 +30,40 @@ const Rastreamento = () => {
       return;
     }
 
+    console.log('🔍 Iniciando busca por:', codigo);
+    
     try {
       setLoading(true);
       setError(null);
+      setPedido(null); // Limpa pedido anterior
+      
       const response = await pedidoService.rastrear(codigo);
-      setPedido(response.data);
+      
+      console.log('✅ Resposta completa:', response);
+      console.log('📦 Dados do pedido:', response.data);
+      
+      if (response.data) {
+        setPedido(response.data);
+      } else {
+        setError('Pedido não encontrado');
+      }
+      
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Pedido não encontrado');
+      console.error('❌ Erro capturado:', err);
+      
+      // Tratamento de erros mais específico
+      if (err.response) {
+        // O servidor respondeu com erro
+        const message = err.response.data?.message || 'Pedido não encontrado';
+        setError(message);
+      } else if (err.request) {
+        // A requisição foi feita mas não houve resposta
+        setError('Servidor não está respondendo. Verifique se o backend está rodando na porta 8080');
+      } else {
+        // Erro ao configurar a requisição
+        setError('Erro ao buscar pedido: ' + err.message);
+      }
+      
       setPedido(null);
     } finally {
       setLoading(false);
@@ -100,12 +128,31 @@ const Rastreamento = () => {
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Buscar'}
               </Button>
             </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              Exemplo: SAFRA-2025-A1B2C3D4
+            </p>
           </form>
 
           {/* Error Message */}
           {error && (
             <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-              ⚠️ {error}
+              <div className="flex items-start gap-2">
+                <span className="text-xl">⚠️</span>
+                <div>
+                  <p className="font-semibold">Erro ao buscar pedido</p>
+                  <p className="text-sm mt-1">{error}</p>
+                  {error.includes('porta 8080') && (
+                    <div className="mt-2 text-xs bg-red-100 p-2 rounded">
+                      <p className="font-semibold">Verifique:</p>
+                      <ul className="list-disc ml-4 mt-1">
+                        <li>O backend está rodando? (mvn spring-boot:run)</li>
+                        <li>A URL está correta? (http://localhost:8080)</li>
+                        <li>O banco de dados está configurado?</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -124,7 +171,7 @@ const Rastreamento = () => {
               <div className="mb-8 space-y-2">
                 <div className="flex items-center gap-4">
                   <span className="text-primary font-semibold">Número de Rastreio:</span>
-                  <span>{pedido.numeroRastreio}</span>
+                  <span className="font-mono">{pedido.numeroRastreio}</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-primary font-semibold">Data da Solicitação:</span>
@@ -221,7 +268,22 @@ const Rastreamento = () => {
           {!pedido && !loading && !error && (
             <div className="text-center py-12 text-muted-foreground">
               <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p>Digite um código de rastreamento para começar</p>
+              <p className="text-lg mb-2">Digite um código de rastreamento para começar</p>
+              <p className="text-sm">
+                Você pode testar com os códigos de exemplo do banco de dados:
+              </p>
+              <div className="mt-4 space-y-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setCodigoBusca('SAFRA-2025-A1B2C3D4');
+                    buscarPedido('SAFRA-2025-A1B2C3D4');
+                  }}
+                >
+                  Testar: SAFRA-2025-A1B2C3D4
+                </Button>
+              </div>
             </div>
           )}
         </div>
