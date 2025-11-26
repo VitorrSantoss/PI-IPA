@@ -3,8 +3,18 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import sustentabilidadeBanner from "@/assets/sustentabilidade-banner.jpg";
+import impactoImage from "@/assets/transparencia-safra.png";
 
 const Sustentabilidade = () => {
+  const handleDownloadImage = (): void => {
+    const link = document.createElement("a");
+    link.href = impactoImage;
+    link.download = "transparencia-safra.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -28,11 +38,12 @@ const Sustentabilidade = () => {
             <strong> ambiental</strong> gerado.
           </p>
           
-          <Link to="/sustentabilidade/impacto">
-            <Button className="bg-primary hover:bg-accent text-lg px-8 py-6">
-              Impacto e Sustentabilidade →
-            </Button>
-          </Link>
+          <Button 
+            onClick={handleDownloadImage}
+            className="bg-primary hover:bg-accent text-lg px-8 py-6"
+          >
+            Impacto e Sustentabilidade →
+          </Button>
         </div>
       </section>
 

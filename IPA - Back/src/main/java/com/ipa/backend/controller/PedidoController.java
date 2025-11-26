@@ -15,7 +15,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@CrossOrigin(origins = "*") // Adiciona CORS explícito
+@CrossOrigin(originPatterns = "*", allowCredentials = "true") // Adiciona CORS explícito
 public class PedidoController {
 
     @Autowired
