@@ -1,5 +1,7 @@
 package com.ipa.backend.model;
 
+import org.hibernate.validator.constraints.br.CPF;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -20,6 +22,7 @@ public class Usuario {
     @Column(nullable = false)
     private String nome;
 
+    @CPF
     @Column(nullable = false, unique = true, length = 14)
     private String cpf; // ✅ CPF como String
 
@@ -40,4 +43,7 @@ public class Usuario {
 
     @Column(length = 10)
     private String cep;
+
+    @Column(length = 9)
+    private String cadastroNacional;
 }

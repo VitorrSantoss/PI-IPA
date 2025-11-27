@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { SolicitacaoDTO } from '../../dto/SolicitacaoDto';
+import { SolicitacaoDTO } from '@/services/solicitacaoservice';
 
 interface SolicitacaoContextType {
   solicitacao: Partial<SolicitacaoDTO>;

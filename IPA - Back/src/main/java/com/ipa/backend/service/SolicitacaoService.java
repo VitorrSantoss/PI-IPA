@@ -1,6 +1,6 @@
 package com.ipa.backend.service;
 
-import com.ipa.backend.dto.SolicitacaoDTO;
+import com.ipa.backend.dto.SolicitacaoDto;
 import com.ipa.backend.model.Solicitacao;
 import com.ipa.backend.repository.SolicitacaoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,27 +16,27 @@ public class SolicitacaoService {
     @Autowired
     private SolicitacaoRepository solicitacaoRepository;
 
-    public List<SolicitacaoDTO> listarTodas() {
+    public List<SolicitacaoDto> listarTodas() {
         return solicitacaoRepository.findAll()
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public List<SolicitacaoDTO> listarPorStatus(String status) {
+    public List<SolicitacaoDto> listarPorStatus(String status) {
         return solicitacaoRepository.findByStatus(status)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public SolicitacaoDTO buscarPorId(Long id) {
+    public SolicitacaoDto buscarPorId(Long id) {
         Solicitacao solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
         return convertToDTO(solicitacao);
     }
 
-    public List<SolicitacaoDTO> buscarPorSolicitante(String cpf) {
+    public List<SolicitacaoDto> buscarPorSolicitante(String cpf) {
         return solicitacaoRepository.findBySolicitanteCpf(cpf)
                 .stream()
                 .map(this::convertToDTO)
@@ -44,14 +44,14 @@ public class SolicitacaoService {
     }
 
     @Transactional
-    public SolicitacaoDTO criar(SolicitacaoDTO dto) {
+    public SolicitacaoDto criar(SolicitacaoDto dto) {
         Solicitacao solicitacao = convertToEntity(dto);
         Solicitacao salva = solicitacaoRepository.save(solicitacao);
         return convertToDTO(salva);
     }
 
     @Transactional
-    public SolicitacaoDTO atualizar(Long id, SolicitacaoDTO dto) {
+    public SolicitacaoDto atualizar(Long id, SolicitacaoDto dto) {
         Solicitacao solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
 
@@ -62,7 +62,7 @@ public class SolicitacaoService {
     }
 
     @Transactional
-    public SolicitacaoDTO atualizarStatus(Long id, String novoStatus) {
+    public SolicitacaoDto atualizarStatus(Long id, String novoStatus) {
         Solicitacao solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
 
@@ -82,8 +82,8 @@ public class SolicitacaoService {
 
     // ===== CONVERSÕES =====
     
-    private SolicitacaoDTO convertToDTO(Solicitacao solicitacao) {
-        SolicitacaoDTO dto = new SolicitacaoDTO();
+    private SolicitacaoDto convertToDTO(Solicitacao solicitacao) {
+        SolicitacaoDto dto = new SolicitacaoDto();
         
         dto.setId(solicitacao.getId());
         
@@ -133,13 +133,13 @@ public class SolicitacaoService {
         return dto;
     }
 
-    private Solicitacao convertToEntity(SolicitacaoDTO dto) {
+    private Solicitacao convertToEntity(SolicitacaoDto dto) {
         Solicitacao solicitacao = new Solicitacao();
         atualizarDados(solicitacao, dto);
         return solicitacao;
     }
 
-    private void atualizarDados(Solicitacao solicitacao, SolicitacaoDTO dto) {
+    private void atualizarDados(Solicitacao solicitacao, SolicitacaoDto dto) {
         // Solicitante
         solicitacao.setSolicitanteNome(dto.getSolicitanteNome());
         solicitacao.setSolicitanteCpf(dto.getSolicitanteCpf());

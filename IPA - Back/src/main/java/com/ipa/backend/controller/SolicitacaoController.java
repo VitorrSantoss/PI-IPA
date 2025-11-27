@@ -1,6 +1,6 @@
 package com.ipa.backend.controller;
 
-import com.ipa.backend.dto.SolicitacaoDTO;
+import com.ipa.backend.dto.SolicitacaoDto;
 import com.ipa.backend.service.SolicitacaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ public class SolicitacaoController {
     private SolicitacaoService solicitacaoService;
 
     @GetMapping
-    public ResponseEntity<List<SolicitacaoDTO>> listarTodas() {
+    public ResponseEntity<List<SolicitacaoDto>> listarTodas() {
         return ResponseEntity.ok(solicitacaoService.listarTodas());
     }
 
@@ -36,19 +36,19 @@ public class SolicitacaoController {
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<SolicitacaoDTO>> listarPorStatus(@PathVariable String status) {
+    public ResponseEntity<List<SolicitacaoDto>> listarPorStatus(@PathVariable String status) {
         return ResponseEntity.ok(solicitacaoService.listarPorStatus(status));
     }
 
     @GetMapping("/solicitante/{cpf}")
-    public ResponseEntity<List<SolicitacaoDTO>> buscarPorSolicitante(@PathVariable String cpf) {
+    public ResponseEntity<List<SolicitacaoDto>> buscarPorSolicitante(@PathVariable String cpf) {
         return ResponseEntity.ok(solicitacaoService.buscarPorSolicitante(cpf));
     }
 
     @PostMapping
-    public ResponseEntity<?> criar(@RequestBody SolicitacaoDTO solicitacaoDTO) {
+    public ResponseEntity<?> criar(@RequestBody SolicitacaoDto solicitacaoDto) {
         try {
-            SolicitacaoDTO nova = solicitacaoService.criar(solicitacaoDTO);
+            SolicitacaoDto nova = solicitacaoService.criar(solicitacaoDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(nova);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
@@ -60,9 +60,9 @@ public class SolicitacaoController {
     @PutMapping("/{id}")
     public ResponseEntity<?> atualizar(
             @PathVariable Long id,
-            @RequestBody SolicitacaoDTO solicitacaoDTO) {
+            @RequestBody SolicitacaoDto solicitacaoDto) {
         try {
-            return ResponseEntity.ok(solicitacaoService.atualizar(id, solicitacaoDTO));
+            return ResponseEntity.ok(solicitacaoService.atualizar(id, solicitacaoDto));
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("message", e.getMessage());
