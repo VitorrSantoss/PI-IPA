@@ -29,7 +29,7 @@ public class Pedido {
     private String status; // PENDENTE, APROVADO, EM_ROTA, ENTREGUE, CANCELADO
 
     @Column(nullable = false)
-    private LocalDateTime dataPedido
+    private LocalDateTime dataPedido;
 
     private LocalDateTime dataEntrega;
     private String observacoes;
