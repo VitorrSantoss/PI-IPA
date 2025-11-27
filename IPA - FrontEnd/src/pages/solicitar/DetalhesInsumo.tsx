@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,26 +8,64 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useSolicitacao } from "./SolicitacaoContext";
 
 const DetalhesInsumo = () => {
   const navigate = useNavigate();
-  const [date, setDate] = useState<Date>();
+  const { solicitacao, atualizarSolicitacao } = useSolicitacao();
+
+  const [date, setDate] = useState<Date | undefined>(
+    solicitacao.dataIdealPlantio ? new Date(solicitacao.dataIdealPlantio) : undefined
+  );
+
   const [formData, setFormData] = useState({
-    tipo: "",
-    cultura: "",
-    quantidade: "",
-    unidade: "",
-    area: "",
-    areaUnidade: "",
-    variedade: "",
-    finalidade: ""
+    tipoInsumo: solicitacao.tipoInsumo || "SEMENTES",
+    cultura: solicitacao.cultura || "",
+    quantidade: solicitacao.quantidade?.toString() || "",
+    unidadeMedida: solicitacao.unidadeMedida || "KG",
+    areaPlantada: solicitacao.areaPlantada?.toString() || "",
+    areaUnidade: solicitacao.areaUnidade || "M2",
+    variedade: solicitacao.variedade || "",
+    finalidade: solicitacao.finalidade || "COMERCIAL"
   });
+
+  useEffect(() => {
+    setFormData({
+      tipoInsumo: solicitacao.tipoInsumo || "SEMENTES",
+      cultura: solicitacao.cultura || "",
+      quantidade: solicitacao.quantidade?.toString() || "",
+      unidadeMedida: solicitacao.unidadeMedida || "KG",
+      areaPlantada: solicitacao.areaPlantada?.toString() || "",
+      areaUnidade: solicitacao.areaUnidade || "M2",
+      variedade: solicitacao.variedade || "",
+      finalidade: solicitacao.finalidade || "COMERCIAL"
+    });
+  }, [solicitacao]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.cultura || !formData.quantidade || !formData.areaPlantada) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    atualizarSolicitacao({
+      ...formData,
+      quantidade: parseInt(formData.quantidade),
+      areaPlantada: parseFloat(formData.areaPlantada),
+      dataIdealPlantio: date ? format(date, "yyyy-MM-dd") : undefined
+    });
+
+    toast.success("Detalhes do insumo salvos!");
     navigate("/solicitar/logistica");
+  };
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -41,78 +79,81 @@ const DetalhesInsumo = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="tipo">Tipo</Label>
-                <Select value={formData.tipo} onValueChange={(value) => setFormData({...formData, tipo: value})}>
+                <Label htmlFor="tipoInsumo">Tipo *</Label>
+                <Select value={formData.tipoInsumo} onValueChange={(value) => handleChange('tipoInsumo', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sementes" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="sementes">Sementes</SelectItem>
-                    <SelectItem value="mudas">Mudas</SelectItem>
+                    <SelectItem value="SEMENTES">Sementes</SelectItem>
+                    <SelectItem value="MUDAS">Mudas</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="cultura">Cultura Desejada</Label>
-                <Select value={formData.cultura} onValueChange={(value) => setFormData({...formData, cultura: value})}>
+                <Label htmlFor="cultura">Cultura Desejada *</Label>
+                <Select value={formData.cultura} onValueChange={(value) => handleChange('cultura', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Milho" />
+                    <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="milho">Milho</SelectItem>
-                    <SelectItem value="feijao">Feijão</SelectItem>
-                    <SelectItem value="mandioca">Mandioca</SelectItem>
+                    <SelectItem value="Milho">Milho</SelectItem>
+                    <SelectItem value="Feijão">Feijão</SelectItem>
+                    <SelectItem value="Mandioca">Mandioca</SelectItem>
+                    <SelectItem value="Tomate">Tomate</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="quantidade">Quantidade</Label>
+                <Label htmlFor="quantidade">Quantidade *</Label>
                 <Input
                   id="quantidade"
                   type="number"
                   placeholder="200"
                   value={formData.quantidade}
-                  onChange={(e) => setFormData({...formData, quantidade: e.target.value})}
+                  onChange={(e) => handleChange('quantidade', e.target.value)}
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="unidade">Unidade de Medida</Label>
-                <Select value={formData.unidade} onValueChange={(value) => setFormData({...formData, unidade: value})}>
+                <Label htmlFor="unidadeMedida">Unidade de Medida *</Label>
+                <Select value={formData.unidadeMedida} onValueChange={(value) => handleChange('unidadeMedida', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Kg" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="kg">Kg</SelectItem>
-                    <SelectItem value="unidade">Unidade</SelectItem>
+                    <SelectItem value="KG">Kg</SelectItem>
+                    <SelectItem value="UNIDADE">Unidade</SelectItem>
+                    <SelectItem value="SACO">Saco</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="area">Área a Ser Plantada</Label>
+                <Label htmlFor="areaPlantada">Área a Ser Plantada *</Label>
                 <Input
-                  id="area"
+                  id="areaPlantada"
                   type="number"
+                  step="0.01"
                   placeholder="5.000"
-                  value={formData.area}
-                  onChange={(e) => setFormData({...formData, area: e.target.value})}
+                  value={formData.areaPlantada}
+                  onChange={(e) => handleChange('areaPlantada', e.target.value)}
                   required
                 />
               </div>
 
               <div>
-                <Label>Unidade (área)</Label>
-                <Select value={formData.areaUnidade} onValueChange={(value) => setFormData({...formData, areaUnidade: value})}>
+                <Label>Unidade (área) *</Label>
+                <Select value={formData.areaUnidade} onValueChange={(value) => handleChange('areaUnidade', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="M2 (Quadrados)" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="m2">M2 (Quadrados)</SelectItem>
-                    <SelectItem value="ha">Hectares</SelectItem>
+                    <SelectItem value="M2">M² (Metros Quadrados)</SelectItem>
+                    <SelectItem value="HECTARES">Hectares</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -123,7 +164,7 @@ const DetalhesInsumo = () => {
                   id="variedade"
                   placeholder="Ex: IPA-100, etc."
                   value={formData.variedade}
-                  onChange={(e) => setFormData({...formData, variedade: e.target.value})}
+                  onChange={(e) => handleChange('variedade', e.target.value)}
                 />
               </div>
 
@@ -143,14 +184,14 @@ const DetalhesInsumo = () => {
               </div>
 
               <div className="md:col-span-2">
-                <Label htmlFor="finalidade">Finalidade da Solicitação</Label>
-                <Select value={formData.finalidade} onValueChange={(value) => setFormData({...formData, finalidade: value})}>
+                <Label htmlFor="finalidade">Finalidade da Solicitação *</Label>
+                <Select value={formData.finalidade} onValueChange={(value) => handleChange('finalidade', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Plantio Comercial" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="comercial">Plantio Comercial</SelectItem>
-                    <SelectItem value="subsistencia">Subsistência</SelectItem>
+                    <SelectItem value="COMERCIAL">Plantio Comercial</SelectItem>
+                    <SelectItem value="SUBSISTENCIA">Subsistência</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
