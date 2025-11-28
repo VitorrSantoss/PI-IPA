@@ -3,9 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SolicitacaoProvider } from "./pages/solicitar/SolicitacaoContext"; // ✅ NOVO
+import { SolicitacaoProvider } from "./pages/solicitar/SolicitacaoContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Register from "./pages/Registro";
 import Rastreamento from "./pages/Rastreamento";
 import DadosAgricultor from "./pages/solicitar/DadosAgricultor";
 import DetalhesInsumo from "./pages/solicitar/DetalhesInsumo";
@@ -23,7 +24,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <SolicitacaoProvider> {/* ✅ NOVO */}
+    <SolicitacaoProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -31,6 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/cadastro" element={<Register />} />
             <Route path="/rastreamento" element={<Rastreamento />} />
             <Route path="/solicitar/dados-agricultor" element={<DadosAgricultor />} />
             <Route path="/solicitar/detalhes" element={<DetalhesInsumo />} />

@@ -24,7 +24,10 @@ public class Usuario {
 
     @CPF
     @Column(nullable = false, unique = true, length = 14)
-    private String cpf; // ✅ CPF como String
+    private String cpf;
+
+    @Column(nullable = false)
+    private String senha; // Em produção, fazer hash com BCrypt
 
     @Column(length = 20)
     private String telefone;
