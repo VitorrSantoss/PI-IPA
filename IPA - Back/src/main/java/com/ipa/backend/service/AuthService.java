@@ -27,11 +27,6 @@ public class AuthService {
         Usuario usuario = usuarioRepository.findByCpf(loginDTO.getCpf())
                 .orElseThrow(() -> new RuntimeException("CPF ou senha inválidos"));
 
-        // Verificar senha (em produção, usar BCrypt)
-        if (!loginDTO.getSenha().equals(usuario.getSenha())) {
-            throw new RuntimeException("CPF ou senha inválidos");
-        }
-
         // Gerar token simples (em produção, usar JWT)
         String token = UUID.randomUUID().toString();
 
@@ -58,11 +53,6 @@ public class AuthService {
             }
         }
 
-        // Validar senha
-        if (usuarioDTO.getSenha() == null || usuarioDTO.getSenha().length() < 6) {
-            throw new RuntimeException("A senha deve ter no mínimo 6 caracteres");
-        }
-
         // Criar usuário
         Usuario usuario = convertToEntity(usuarioDTO);
         Usuario usuarioSalvo = usuarioRepository.save(usuario);
@@ -80,12 +70,8 @@ public class AuthService {
         dto.setId(usuario.getId());
         dto.setNome(usuario.getNome());
         dto.setCpf(usuario.getCpf());
-        dto.setTelefone(usuario.getTelefone());
         dto.setEmail(usuario.getEmail());
-        dto.setEndereco(usuario.getEndereco());
-        dto.setCidade(usuario.getCidade());
         dto.setEstado(usuario.getEstado());
-        dto.setCep(usuario.getCep());
         // Não retornar senha no DTO
         return dto;
     }
@@ -94,13 +80,8 @@ public class AuthService {
         Usuario usuario = new Usuario();
         usuario.setNome(dto.getNome());
         usuario.setCpf(dto.getCpf());
-        usuario.setSenha(dto.getSenha()); // Em produção, fazer hash com BCrypt
-        usuario.setTelefone(dto.getTelefone());
         usuario.setEmail(dto.getEmail());
-        usuario.setEndereco(dto.getEndereco());
-        usuario.setCidade(dto.getCidade());
         usuario.setEstado(dto.getEstado());
-        usuario.setCep(dto.getCep());
         return usuario;
     }
 }
