@@ -31,10 +31,23 @@ public class UsuarioIpa {
   @Column(length = 20)
   private String telefone;
 
+  @Column
+  private String email;
+
   @Column(length = 9)
   private String matriculaIpa;
-  
+
   @Column
   private String localAtuacao;
+
+  @Column(nullable = false)
+  private String senha; // Em produção, fazer hash com BCrypt
+
+  @Column
+  private String cidade;
+
+  @Column(nullable = false, name = "UF")
+  private String uf;
+
 
 }
