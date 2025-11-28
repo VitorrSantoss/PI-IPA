@@ -17,14 +17,14 @@ const Register = () => {
   const [formData, setFormData] = useState({
     nome: "",
     cpf: "",
-    senha: "",
-    confirmarSenha: "",
     telefone: "",
     email: "",
-    endereco: "",
+    matricula: "",
+    localAtuacao: "",
+    senha: "",
+    confirmarSenha: "",
     cidade: "",
-    estado: "",
-    cep: ""
+    estado: ""
   });
 
   const handleChange = (field: string, value: string) => {
@@ -45,13 +45,6 @@ const Register = () => {
       .replace(/(\d{2})(\d)/, '($1) $2')
       .replace(/(\d{5})(\d)/, '$1-$2')
       .replace(/(-\d{4})\d+?$/, '$1');
-  };
-
-  const formatCEP = (value: string) => {
-    return value
-      .replace(/\D/g, '')
-      .replace(/(\d{5})(\d)/, '$1-$2')
-      .replace(/(-\d{3})\d+?$/, '$1');
   };
 
   const validateForm = () => {
@@ -89,13 +82,15 @@ const Register = () => {
       await authService.register({
         nome: formData.nome,
         cpf: formData.cpf,
-        senha: formData.senha,
         telefone: formData.telefone,
         email: formData.email,
-        endereco: formData.endereco,
+        // @ts-ignore - Caso a interface do authService ainda não tenha esses campos tipados
+        matricula: formData.matricula,
+        // @ts-ignore
+        localAtuacao: formData.localAtuacao,
+        senha: formData.senha,
         cidade: formData.cidade,
-        estado: formData.estado,
-        cep: formData.cep
+        estado: formData.estado
       });
 
       toast.success("Cadastro realizado com sucesso! Faça login para continuar.");
@@ -131,6 +126,7 @@ const Register = () => {
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Nome Completo */}
                 <div className="md:col-span-2">
                   <Label htmlFor="nome">Nome Completo *</Label>
                   <Input
@@ -143,6 +139,7 @@ const Register = () => {
                   />
                 </div>
 
+                {/* CPF */}
                 <div>
                   <Label htmlFor="cpf">CPF *</Label>
                   <Input
@@ -156,6 +153,7 @@ const Register = () => {
                   />
                 </div>
 
+                {/* Telefone */}
                 <div>
                   <Label htmlFor="telefone">Telefone *</Label>
                   <Input
@@ -169,6 +167,7 @@ const Register = () => {
                   />
                 </div>
 
+                {/* Email */}
                 <div className="md:col-span-2">
                   <Label htmlFor="email">Email *</Label>
                   <Input
@@ -182,6 +181,31 @@ const Register = () => {
                   />
                 </div>
 
+                {/* Matricula IPA */}
+                <div>
+                  <Label htmlFor="matricula">Matrícula IPA</Label>
+                  <Input
+                    id="matricula"
+                    value={formData.matricula}
+                    onChange={(e) => handleChange('matricula', e.target.value)}
+                    placeholder="000000"
+                    disabled={loading}
+                  />
+                </div>
+
+                {/* Local de Atuação */}
+                <div>
+                  <Label htmlFor="localAtuacao">Local de Atuação</Label>
+                  <Input
+                    id="localAtuacao"
+                    value={formData.localAtuacao}
+                    onChange={(e) => handleChange('localAtuacao', e.target.value)}
+                    placeholder="Ex: Escritório Local"
+                    disabled={loading}
+                  />
+                </div>
+
+                {/* Senha */}
                 <div>
                   <Label htmlFor="senha">Senha * (mín. 6 caracteres)</Label>
                   <Input
@@ -195,6 +219,7 @@ const Register = () => {
                   />
                 </div>
 
+                {/* Confirmar Senha */}
                 <div>
                   <Label htmlFor="confirmarSenha">Confirmar Senha *</Label>
                   <Input
@@ -208,17 +233,7 @@ const Register = () => {
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <Label htmlFor="endereco">Endereço</Label>
-                  <Input
-                    id="endereco"
-                    value={formData.endereco}
-                    onChange={(e) => handleChange('endereco', e.target.value)}
-                    placeholder="Rua, número, complemento"
-                    disabled={loading}
-                  />
-                </div>
-
+                {/* Cidade */}
                 <div>
                   <Label htmlFor="cidade">Cidade</Label>
                   <Input
@@ -230,6 +245,7 @@ const Register = () => {
                   />
                 </div>
 
+                {/* Estado */}
                 <div>
                   <Label htmlFor="estado">Estado</Label>
                   <Input
@@ -238,18 +254,6 @@ const Register = () => {
                     onChange={(e) => handleChange('estado', e.target.value.toUpperCase())}
                     placeholder="PE"
                     maxLength={2}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <Label htmlFor="cep">CEP</Label>
-                  <Input
-                    id="cep"
-                    value={formData.cep}
-                    onChange={(e) => handleChange('cep', formatCEP(e.target.value))}
-                    placeholder="00000-000"
-                    maxLength={9}
                     disabled={loading}
                   />
                 </div>
