@@ -57,12 +57,8 @@ public class UsuarioService {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         usuario.setNome(usuarioDTO.getNome());
-        usuario.setTelefone(usuarioDTO.getTelefone());
         usuario.setEmail(usuarioDTO.getEmail());
-        usuario.setEndereco(usuarioDTO.getEndereco());
-        usuario.setCidade(usuarioDTO.getCidade());
         usuario.setEstado(usuarioDTO.getEstado());
-        usuario.setCep(usuarioDTO.getCep());
 
         Usuario usuarioAtualizado = usuarioRepository.save(usuario);
         return convertToDTO(usuarioAtualizado);
@@ -81,12 +77,8 @@ public class UsuarioService {
         dto.setId(usuario.getId());
         dto.setNome(usuario.getNome());
         dto.setCpf(usuario.getCpf());
-        dto.setTelefone(usuario.getTelefone());
         dto.setEmail(usuario.getEmail());
-        dto.setEndereco(usuario.getEndereco());
-        dto.setCidade(usuario.getCidade());
         dto.setEstado(usuario.getEstado());
-        dto.setCep(usuario.getCep());
         return dto;
     }
 
@@ -94,12 +86,8 @@ public class UsuarioService {
         Usuario usuario = new Usuario();
         usuario.setNome(dto.getNome());
         usuario.setCpf(dto.getCpf());
-        usuario.setTelefone(dto.getTelefone());
         usuario.setEmail(dto.getEmail());
-        usuario.setEndereco(dto.getEndereco());
-        usuario.setCidade(dto.getCidade());
         usuario.setEstado(dto.getEstado());
-        usuario.setCep(dto.getCep());
         return usuario;
     }
 }

@@ -6,9 +6,12 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.AllArgsConstructor;
@@ -25,7 +28,17 @@ public class Solicitacao {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  // ===== DADOS DO USUÁRIO SOLICITANTE =====
+  // ===== RELACIONAMENTOS COM USUÁRIOS =====
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "solicitante_id", nullable = false)
+  private Usuario solicitante;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "beneficiario_id", nullable = false)
+  private Usuario beneficiario;
+
+  // ===== DADOS DO USUÁRIO SOLICITANTE (mantidos para compatibilidade) =====
   @Column(name = "solicitante_nome", nullable = false)
   private String solicitanteNome;
 
@@ -41,7 +54,7 @@ public class Solicitacao {
   @Column(name = "local_atuacao")
   private String localAtuacao;
 
-  // ===== DADOS DO AGRICULTOR BENEFICIADO =====
+  // ===== DADOS DO AGRICULTOR BENEFICIADO (mantidos para compatibilidade) =====
   @Column(name = "beneficiario_nome", nullable = false)
   private String beneficiarioNome;
 
@@ -65,7 +78,7 @@ public class Solicitacao {
 
   // ===== DETALHES DO INSUMO =====
   @Column(name = "tipo_insumo", nullable = false)
-  private String tipoInsumo; // SEMENTES ou MUDAS
+  private String tipoInsumo;
 
   @Column(name = "cultura", nullable = false)
   private String cultura;
@@ -77,23 +90,23 @@ public class Solicitacao {
   private Integer quantidade;
 
   @Column(name = "unidade_medida", nullable = false)
-  private String unidadeMedida; // KG, UNIDADE, etc
+  private String unidadeMedida;
 
   @Column(name = "area_plantada")
   private BigDecimal areaPlantada;
 
   @Column(name = "area_unidade")
-  private String areaUnidade; // M2, HECTARES
+  private String areaUnidade;
 
   @Column(name = "data_ideal_plantio")
   private LocalDate dataIdealPlantio;
 
   @Column(nullable = false)
-  private String finalidade; // COMERCIAL, SUBSISTENCIA
+  private String finalidade;
 
   // ===== LOGÍSTICA =====
   @Column(name = "forma_entrega", nullable = false)
-  private String formaEntrega; // RETIRADA ou ENTREGA_DOMICILIO
+  private String formaEntrega;
 
   @Column(name = "municipio_destino")
   private String municipioDestino;
@@ -115,7 +128,7 @@ public class Solicitacao {
 
   // ===== CONTROLE =====
   @Column(nullable = false)
-  private String status; // RASCUNHO, ENVIADA, APROVADA, REJEITADA, CONVERTIDA_PEDIDO
+  private String status;
 
   @Column(name = "data_criacao", nullable = false)
   private LocalDateTime dataCriacao;
@@ -124,7 +137,7 @@ public class Solicitacao {
   private LocalDateTime dataAtualizacao;
 
   @Column(name = "pedido_id")
-  private Long pedidoId; // Referência ao pedido criado após aprovação
+  private Long pedidoId;
 
   @Column(columnDefinition = "TEXT")
   private String observacoes;
@@ -135,6 +148,19 @@ public class Solicitacao {
     this.dataAtualizacao = LocalDateTime.now();
     if (this.status == null) {
       this.status = "RASCUNHO";
+    }
+
+    // Sincronizar dados do solicitante
+    if (this.solicitante != null) {
+      this.solicitanteNome = this.solicitante.getNome();
+      this.solicitanteCpf = this.solicitante.getCpf();
+    }
+
+    // Sincronizar dados do beneficiário
+    if (this.beneficiario != null) {
+      this.beneficiarioNome = this.beneficiario.getNome();
+      this.beneficiarioCpf = this.beneficiario.getCpf();
+      this.beneficiarioCep = this.beneficiario.getCep();
     }
   }
 
