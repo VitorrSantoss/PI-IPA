@@ -1,9 +1,9 @@
 package com.ipa.backend.service;
 
 import com.ipa.backend.dto.LoginDTO;
-import com.ipa.backend.dto.UsuarioDTO;
-import com.ipa.backend.model.Usuario;
-import com.ipa.backend.repository.UsuarioRepository;
+import com.ipa.backend.dto.UsuarioIpaDTO;
+import com.ipa.backend.model.UsuarioIpa;
+import com.ipa.backend.repository.UsuarioIpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,21 +16,20 @@ import java.util.UUID;
 public class AuthService {
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private UsuarioService usuarioService;
+    private UsuarioIpaRepository usuarioIpaRepository;
 
     @Transactional
     public Map<String, Object> authenticate(LoginDTO loginDTO) {
-        // Buscar usuário por CPF
-        Usuario usuario = usuarioRepository.findByCpf(loginDTO.getCpf())
+        UsuarioIpa usuario = usuarioIpaRepository.findByCpf(loginDTO.getCpf())
                 .orElseThrow(() -> new RuntimeException("CPF ou senha inválidos"));
 
-        // Gerar token simples (em produção, usar JWT)
+        // Verificar senha (adicione verificação de hash em produção)
+        if (!usuario.getSenha().equals(loginDTO.getSenha())) {
+            throw new RuntimeException("CPF ou senha inválidos");
+        }
+
         String token = UUID.randomUUID().toString();
 
-        // Preparar resposta
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
         response.put("usuario", convertToDTO(usuario));
@@ -40,48 +39,52 @@ public class AuthService {
     }
 
     @Transactional
-    public UsuarioDTO register(UsuarioDTO usuarioDTO) {
-        // Verificar se CPF já existe
-        if (usuarioRepository.existsByCpf(usuarioDTO.getCpf())) {
+    public UsuarioIpaDTO register(UsuarioIpaDTO usuarioDTO) {
+        if (usuarioIpaRepository.existsByCpf(usuarioDTO.getCpf())) {
             throw new RuntimeException("CPF já cadastrado no sistema");
         }
 
-        // Verificar se email já existe
         if (usuarioDTO.getEmail() != null && !usuarioDTO.getEmail().isEmpty()) {
-            if (usuarioRepository.findByEmail(usuarioDTO.getEmail()).isPresent()) {
+            if (usuarioIpaRepository.findByEmail(usuarioDTO.getEmail()).isPresent()) {
                 throw new RuntimeException("Email já cadastrado no sistema");
             }
         }
 
-        // Criar usuário
-        Usuario usuario = convertToEntity(usuarioDTO);
-        Usuario usuarioSalvo = usuarioRepository.save(usuario);
+        UsuarioIpa usuario = convertToEntity(usuarioDTO);
+        UsuarioIpa usuarioSalvo = usuarioIpaRepository.save(usuario);
 
         return convertToDTO(usuarioSalvo);
     }
 
     public boolean validateToken(String token) {
-        // Em produção, implementar validação JWT real
         return token != null && !token.isEmpty();
     }
 
-    private UsuarioDTO convertToDTO(Usuario usuario) {
-        UsuarioDTO dto = new UsuarioDTO();
+    private UsuarioIpaDTO convertToDTO(UsuarioIpa usuario) {
+        UsuarioIpaDTO dto = new UsuarioIpaDTO();
         dto.setId(usuario.getId());
         dto.setNome(usuario.getNome());
         dto.setCpf(usuario.getCpf());
         dto.setEmail(usuario.getEmail());
-        dto.setEstado(usuario.getEstado());
-        // Não retornar senha no DTO
+        dto.setTelefone(usuario.getTelefone());
+        dto.setMatriculaIpa(usuario.getMatriculaIpa());
+        dto.setLocalAtuacao(usuario.getLocalAtuacao());
+        dto.setCidade(usuario.getCidade());
+        dto.setUf(usuario.getUf());
         return dto;
     }
 
-    private Usuario convertToEntity(UsuarioDTO dto) {
-        Usuario usuario = new Usuario();
+    private UsuarioIpa convertToEntity(UsuarioIpaDTO dto) {
+        UsuarioIpa usuario = new UsuarioIpa();
         usuario.setNome(dto.getNome());
         usuario.setCpf(dto.getCpf());
         usuario.setEmail(dto.getEmail());
-        usuario.setEstado(dto.getEstado());
+        usuario.setTelefone(dto.getTelefone());
+        usuario.setMatriculaIpa(dto.getMatriculaIpa());
+        usuario.setLocalAtuacao(dto.getLocalAtuacao());
+        usuario.setSenha(dto.getSenha()); // Em produção, fazer hash com BCrypt
+        usuario.setCidade(dto.getCidade());
+        usuario.setUf(dto.getUf());
         return usuario;
     }
 }

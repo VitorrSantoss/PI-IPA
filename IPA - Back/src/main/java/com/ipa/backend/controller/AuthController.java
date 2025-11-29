@@ -1,7 +1,7 @@
 package com.ipa.backend.controller;
 
 import com.ipa.backend.dto.LoginDTO;
-import com.ipa.backend.dto.UsuarioDTO;
+import com.ipa.backend.dto.UsuarioIpaDTO;
 import com.ipa.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,9 +32,9 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UsuarioDTO usuarioDTO) {
+    public ResponseEntity<?> register(@RequestBody UsuarioIpaDTO usuarioDTO) {
         try {
-            UsuarioDTO novoUsuario = authService.register(usuarioDTO);
+            UsuarioIpaDTO novoUsuario = authService.register(usuarioDTO);
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Usuário cadastrado com sucesso!");
             response.put("usuario", novoUsuario);
