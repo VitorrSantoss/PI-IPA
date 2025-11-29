@@ -8,7 +8,11 @@ import org.springframework.stereotype.Service;
 
 import com.ipa.backend.dto.SolicitacaoDto;
 import com.ipa.backend.model.Solicitacao;
+import com.ipa.backend.model.Usuario;
+import com.ipa.backend.model.UsuarioIpa;
 import com.ipa.backend.repository.SolicitacaoRepository;
+import com.ipa.backend.repository.UsuarioRepository;
+import com.ipa.backend.repository.UsuarioIpaRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -17,6 +21,12 @@ public class SolicitacaoService {
 
   @Autowired
   private SolicitacaoRepository solicitacaoRepository;
+
+  @Autowired
+  private UsuarioIpaRepository usuarioIpaRepository;
+
+  @Autowired
+  private UsuarioRepository usuarioRepository;
 
   public List<SolicitacaoDto> listarTodas() {
     return solicitacaoRepository.findAll()
@@ -47,7 +57,17 @@ public class SolicitacaoService {
 
   @Transactional
   public SolicitacaoDto criar(SolicitacaoDto dto) {
+    // Buscar ou criar UsuarioIpa (solicitante)
+    UsuarioIpa solicitante = buscarOuCriarUsuarioIpa(dto);
+
+    // Buscar ou criar Usuario (beneficiário)
+    Usuario beneficiario = buscarOuCriarUsuario(dto);
+
+    // Criar solicitação
     Solicitacao solicitacao = convertToEntity(dto);
+    solicitacao.setSolicitante(solicitante);
+    solicitacao.setBeneficiario(beneficiario);
+
     Solicitacao salva = solicitacaoRepository.save(solicitacao);
     return convertToDTO(salva);
   }
@@ -56,6 +76,17 @@ public class SolicitacaoService {
   public SolicitacaoDto atualizar(Long id, SolicitacaoDto dto) {
     Solicitacao solicitacao = solicitacaoRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
+
+    // Atualizar relacionamentos se necessário
+    if (dto.getSolicitanteCpf() != null) {
+      UsuarioIpa solicitante = buscarOuCriarUsuarioIpa(dto);
+      solicitacao.setSolicitante(solicitante);
+    }
+
+    if (dto.getBeneficiarioCpf() != null) {
+      Usuario beneficiario = buscarOuCriarUsuario(dto);
+      solicitacao.setBeneficiario(beneficiario);
+    }
 
     atualizarDados(solicitacao, dto);
 
@@ -82,12 +113,55 @@ public class SolicitacaoService {
     solicitacaoRepository.deleteById(id);
   }
 
+  // ===== MÉTODOS AUXILIARES =====
+
+  private UsuarioIpa buscarOuCriarUsuarioIpa(SolicitacaoDto dto) {
+    return usuarioIpaRepository.findByCpf(dto.getSolicitanteCpf())
+        .orElseGet(() -> {
+          UsuarioIpa novo = new UsuarioIpa();
+          novo.setNome(dto.getSolicitanteNome());
+          novo.setCpf(dto.getSolicitanteCpf());
+          novo.setTelefone(dto.getSolicitanteTelefone());
+          novo.setMatriculaIpa(dto.getSolicitanteMatricula());
+          novo.setLocalAtuacao(dto.getLocalAtuacao());
+          novo.setSenha("senha123"); // Senha padrão - deve ser alterada
+          return usuarioIpaRepository.save(novo);
+        });
+  }
+
+  private Usuario buscarOuCriarUsuario(SolicitacaoDto dto) {
+    return usuarioRepository.findByCpf(dto.getBeneficiarioCpf())
+        .orElseGet(() -> {
+          Usuario novo = new Usuario();
+          novo.setNome(dto.getBeneficiarioNome());
+          novo.setCpf(dto.getBeneficiarioCpf());
+          novo.setCep(dto.getBeneficiarioCep());
+          novo.setCaf(dto.getBeneficiarioCaf());
+          // Converter String para Enum
+          try {
+            novo.setTipoPropriedade(
+                com.ipa.backend.constants.TipoPropriedade.valueOf(dto.getTipoPropriedade()));
+          } catch (Exception e) {
+            novo.setTipoPropriedade(com.ipa.backend.constants.TipoPropriedade.SITIO);
+          }
+          return usuarioRepository.save(novo);
+        });
+  }
+
   // ===== CONVERSÕES =====
 
   private SolicitacaoDto convertToDTO(Solicitacao solicitacao) {
     SolicitacaoDto dto = new SolicitacaoDto();
 
     dto.setId(solicitacao.getId());
+
+    // IDs dos relacionamentos
+    if (solicitacao.getSolicitante() != null) {
+      dto.setSolicitanteId(solicitacao.getSolicitante().getId());
+    }
+    if (solicitacao.getBeneficiario() != null) {
+      dto.setBeneficiarioId(solicitacao.getBeneficiario().getId());
+    }
 
     // Solicitante
     dto.setSolicitanteNome(solicitacao.getSolicitanteNome());
@@ -142,22 +216,6 @@ public class SolicitacaoService {
   }
 
   private void atualizarDados(Solicitacao solicitacao, SolicitacaoDto dto) {
-    // Solicitante
-    solicitacao.setSolicitanteNome(dto.getSolicitanteNome());
-    solicitacao.setSolicitanteCpf(dto.getSolicitanteCpf());
-    solicitacao.setSolicitanteMatricula(dto.getSolicitanteMatricula());
-    solicitacao.setSolicitanteTelefone(dto.getSolicitanteTelefone());
-    solicitacao.setLocalAtuacao(dto.getLocalAtuacao());
-
-    // Beneficiário
-    solicitacao.setBeneficiarioNome(dto.getBeneficiarioNome());
-    solicitacao.setBeneficiarioCpf(dto.getBeneficiarioCpf());
-    solicitacao.setBeneficiarioCaf(dto.getBeneficiarioCaf());
-    solicitacao.setTipoPropriedade(dto.getTipoPropriedade());
-    solicitacao.setBeneficiarioCep(dto.getBeneficiarioCep());
-    solicitacao.setBeneficiarioComplemento(dto.getBeneficiarioComplemento());
-    solicitacao.setPontoReferencia(dto.getPontoReferencia());
-
     // Insumo
     solicitacao.setTipoInsumo(dto.getTipoInsumo());
     solicitacao.setCultura(dto.getCultura());
@@ -177,6 +235,11 @@ public class SolicitacaoService {
     solicitacao.setComplementoEntrega(dto.getComplementoEntrega());
     solicitacao.setNomeDestinatario(dto.getNomeDestinatario());
     solicitacao.setTelefoneDestinatario(dto.getTelefoneDestinatario());
+
+    // Beneficiário (campos adicionais)
+    solicitacao.setBeneficiarioComplemento(dto.getBeneficiarioComplemento());
+    solicitacao.setPontoReferencia(dto.getPontoReferencia());
+    solicitacao.setTipoPropriedade(dto.getTipoPropriedade());
 
     // Controle
     if (dto.getStatus() != null) {

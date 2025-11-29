@@ -46,7 +46,7 @@ public class UsuarioIpa {
   @Column
   private String cidade;
 
-  @Column(nullable = false, name = "UF")
+  @Column(name = "UF")
   private String uf;
 
 

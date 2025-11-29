@@ -15,6 +15,10 @@ public class SolicitacaoDto {
 
   private Long id;
 
+  // IDs dos relacionamentos
+  private Long solicitanteId;
+  private Long beneficiarioId;
+
   // Dados do Solicitante
   private String solicitanteNome;
   private String solicitanteCpf;

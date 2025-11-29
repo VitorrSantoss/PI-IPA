@@ -28,17 +28,17 @@ public class Solicitacao {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  // ===== RELACIONAMENTOS COM USUÁRIOS =====
-
+  // ===== RELACIONAMENTO COM USUÁRIO IPA (SOLICITANTE) =====
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "solicitante_id", nullable = false)
-  private Usuario solicitante;
+  private UsuarioIpa solicitante;
 
+  // ===== RELACIONAMENTO COM USUÁRIO BENEFICIÁRIO =====
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "beneficiario_id", nullable = false)
   private Usuario beneficiario;
 
-  // ===== DADOS DO USUÁRIO SOLICITANTE (mantidos para compatibilidade) =====
+  // ===== DADOS DO USUÁRIO SOLICITANTE (campos duplicados para performance) =====
   @Column(name = "solicitante_nome", nullable = false)
   private String solicitanteNome;
 
@@ -54,7 +54,8 @@ public class Solicitacao {
   @Column(name = "local_atuacao")
   private String localAtuacao;
 
-  // ===== DADOS DO AGRICULTOR BENEFICIADO (mantidos para compatibilidade) =====
+  // ===== DADOS DO AGRICULTOR BENEFICIADO (campos duplicados para performance)
+  // =====
   @Column(name = "beneficiario_nome", nullable = false)
   private String beneficiarioNome;
 
@@ -154,6 +155,9 @@ public class Solicitacao {
     if (this.solicitante != null) {
       this.solicitanteNome = this.solicitante.getNome();
       this.solicitanteCpf = this.solicitante.getCpf();
+      this.solicitanteMatricula = this.solicitante.getMatriculaIpa();
+      this.solicitanteTelefone = this.solicitante.getTelefone();
+      this.localAtuacao = this.solicitante.getLocalAtuacao();
     }
 
     // Sincronizar dados do beneficiário
@@ -161,11 +165,29 @@ public class Solicitacao {
       this.beneficiarioNome = this.beneficiario.getNome();
       this.beneficiarioCpf = this.beneficiario.getCpf();
       this.beneficiarioCep = this.beneficiario.getCep();
+      this.beneficiarioCaf = this.beneficiario.getCaf();
     }
   }
 
   @PreUpdate
   protected void onUpdate() {
     this.dataAtualizacao = LocalDateTime.now();
+
+    // Atualizar dados do solicitante se o relacionamento mudou
+    if (this.solicitante != null) {
+      this.solicitanteNome = this.solicitante.getNome();
+      this.solicitanteCpf = this.solicitante.getCpf();
+      this.solicitanteMatricula = this.solicitante.getMatriculaIpa();
+      this.solicitanteTelefone = this.solicitante.getTelefone();
+      this.localAtuacao = this.solicitante.getLocalAtuacao();
+    }
+
+    // Atualizar dados do beneficiário se o relacionamento mudou
+    if (this.beneficiario != null) {
+      this.beneficiarioNome = this.beneficiario.getNome();
+      this.beneficiarioCpf = this.beneficiario.getCpf();
+      this.beneficiarioCep = this.beneficiario.getCep();
+      this.beneficiarioCaf = this.beneficiario.getCaf();
+    }
   }
 }
