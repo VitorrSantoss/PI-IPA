@@ -24,36 +24,42 @@ const Register = () => {
     senha: "",
     confirmarSenha: "",
     cidade: "",
-    estado: ""
+    estado: "",
   });
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const formatCPF = (value: string) => {
     return value
-      .replace(/\D/g, '')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+      .replace(/\D/g, "")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
   };
 
   const formatPhone = (value: string) => {
     return value
-      .replace(/\D/g, '')
-      .replace(/(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d{5})(\d)/, '$1-$2')
-      .replace(/(-\d{4})\d+?$/, '$1');
+      .replace(/\D/g, "")
+      .replace(/(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{5})(\d)/, "$1-$2")
+      .replace(/(-\d{4})\d+?$/, "$1");
   };
 
   const validateForm = () => {
-    if (!formData.nome || !formData.cpf || !formData.senha || !formData.email || !formData.telefone) {
+    if (
+      !formData.nome ||
+      !formData.cpf ||
+      !formData.senha ||
+      !formData.email ||
+      !formData.telefone
+    ) {
       toast.error("Preencha todos os campos obrigatórios");
       return false;
     }
 
-    if (formData.cpf.replace(/\D/g, '').length !== 11) {
+    if (formData.cpf.replace(/\D/g, "").length !== 11) {
       toast.error("CPF inválido");
       return false;
     }
@@ -84,21 +90,20 @@ const Register = () => {
         cpf: formData.cpf,
         telefone: formData.telefone,
         email: formData.email,
-        // @ts-ignore - Caso a interface do authService ainda não tenha esses campos tipados
-        matricula: formData.matricula,
-        // @ts-ignore
+        matriculaIpa: formData.matricula,
         localAtuacao: formData.localAtuacao,
         senha: formData.senha,
         cidade: formData.cidade,
-        estado: formData.estado
+        uf: formData.estado, // Mudado de 'estado' para 'uf'
       });
 
-      toast.success("Cadastro realizado com sucesso! Faça login para continuar.");
-      
+      toast.success(
+        "Cadastro realizado com sucesso! Faça login para continuar."
+      );
+
       setTimeout(() => {
         navigate("/login");
       }, 1500);
-
     } catch (error: any) {
       console.error("Erro ao cadastrar:", error);
       toast.error(error.response?.data?.message || "Erro ao realizar cadastro");
@@ -111,19 +116,21 @@ const Register = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main 
+      <main
         className="flex-1 flex items-center justify-center px-6 py-12 bg-cover bg-center relative"
         style={{ backgroundImage: `url(${heroImage})` }}
       >
         <div className="absolute inset-0 bg-black/50"></div>
-        
+
         <div className="relative z-10 w-full max-w-2xl">
           <div className="bg-white rounded-lg shadow-2xl p-8 border-4 border-primary">
-            <h1 className="text-3xl font-bold text-center mb-2 text-foreground">Criar Conta</h1>
+            <h1 className="text-3xl font-bold text-center mb-2 text-foreground">
+              Criar Conta
+            </h1>
             <p className="text-center text-muted-foreground mb-8">
               Cadastre-se no sistema S.A.F.R.A.
             </p>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Nome Completo */}
@@ -132,7 +139,7 @@ const Register = () => {
                   <Input
                     id="nome"
                     value={formData.nome}
-                    onChange={(e) => handleChange('nome', e.target.value)}
+                    onChange={(e) => handleChange("nome", e.target.value)}
                     placeholder="João Silva"
                     required
                     disabled={loading}
@@ -145,7 +152,9 @@ const Register = () => {
                   <Input
                     id="cpf"
                     value={formData.cpf}
-                    onChange={(e) => handleChange('cpf', formatCPF(e.target.value))}
+                    onChange={(e) =>
+                      handleChange("cpf", formatCPF(e.target.value))
+                    }
                     placeholder="000.000.000-00"
                     maxLength={14}
                     required
@@ -159,7 +168,9 @@ const Register = () => {
                   <Input
                     id="telefone"
                     value={formData.telefone}
-                    onChange={(e) => handleChange('telefone', formatPhone(e.target.value))}
+                    onChange={(e) =>
+                      handleChange("telefone", formatPhone(e.target.value))
+                    }
                     placeholder="(00) 00000-0000"
                     maxLength={15}
                     required
@@ -174,7 +185,7 @@ const Register = () => {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleChange('email', e.target.value)}
+                    onChange={(e) => handleChange("email", e.target.value)}
                     placeholder="joao@email.com"
                     required
                     disabled={loading}
@@ -187,7 +198,7 @@ const Register = () => {
                   <Input
                     id="matricula"
                     value={formData.matricula}
-                    onChange={(e) => handleChange('matricula', e.target.value)}
+                    onChange={(e) => handleChange("matricula", e.target.value)}
                     placeholder="000000"
                     disabled={loading}
                   />
@@ -199,7 +210,9 @@ const Register = () => {
                   <Input
                     id="localAtuacao"
                     value={formData.localAtuacao}
-                    onChange={(e) => handleChange('localAtuacao', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("localAtuacao", e.target.value)
+                    }
                     placeholder="Ex: Escritório Local"
                     disabled={loading}
                   />
@@ -212,7 +225,7 @@ const Register = () => {
                     id="senha"
                     type="password"
                     value={formData.senha}
-                    onChange={(e) => handleChange('senha', e.target.value)}
+                    onChange={(e) => handleChange("senha", e.target.value)}
                     placeholder="••••••"
                     required
                     disabled={loading}
@@ -226,7 +239,9 @@ const Register = () => {
                     id="confirmarSenha"
                     type="password"
                     value={formData.confirmarSenha}
-                    onChange={(e) => handleChange('confirmarSenha', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("confirmarSenha", e.target.value)
+                    }
                     placeholder="••••••"
                     required
                     disabled={loading}
@@ -239,7 +254,7 @@ const Register = () => {
                   <Input
                     id="cidade"
                     value={formData.cidade}
-                    onChange={(e) => handleChange('cidade', e.target.value)}
+                    onChange={(e) => handleChange("cidade", e.target.value)}
                     placeholder="Recife"
                     disabled={loading}
                   />
@@ -251,7 +266,9 @@ const Register = () => {
                   <Input
                     id="estado"
                     value={formData.estado}
-                    onChange={(e) => handleChange('estado', e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      handleChange("estado", e.target.value.toUpperCase())
+                    }
                     placeholder="PE"
                     maxLength={2}
                     disabled={loading}
@@ -259,8 +276,8 @@ const Register = () => {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-primary hover:bg-accent"
                 disabled={loading}
               >
@@ -270,14 +287,17 @@ const Register = () => {
                     Cadastrando...
                   </>
                 ) : (
-                  'CADASTRAR'
+                  "CADASTRAR"
                 )}
               </Button>
 
               <div className="text-center mt-4">
                 <p className="text-sm text-muted-foreground">
-                  Já tem uma conta?{' '}
-                  <Link to="/login" className="text-primary hover:underline font-semibold">
+                  Já tem uma conta?{" "}
+                  <Link
+                    to="/login"
+                    className="text-primary hover:underline font-semibold"
+                  >
                     Faça login
                   </Link>
                 </p>
