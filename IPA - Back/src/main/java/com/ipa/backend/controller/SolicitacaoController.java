@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ipa.backend.dto.SolicitacaoDto;
+import com.ipa.backend.dto.SolicitacaoDTO;
 import com.ipa.backend.service.SolicitacaoService;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -32,7 +32,7 @@ public class SolicitacaoController {
   private SolicitacaoService solicitacaoService;
 
   @GetMapping
-  public ResponseEntity<List<SolicitacaoDto>> listarTodas() {
+  public ResponseEntity<List<SolicitacaoDTO>> listarTodas() {
     return ResponseEntity.ok(solicitacaoService.listarTodas());
   }
 
@@ -48,19 +48,19 @@ public class SolicitacaoController {
   }
 
   @GetMapping("/status/{status}")
-  public ResponseEntity<List<SolicitacaoDto>> listarPorStatus(@PathVariable String status) {
+  public ResponseEntity<List<SolicitacaoDTO>> listarPorStatus(@PathVariable String status) {
     return ResponseEntity.ok(solicitacaoService.listarPorStatus(status));
   }
 
   @GetMapping("/solicitante/{cpf}")
-  public ResponseEntity<List<SolicitacaoDto>> buscarPorSolicitante(@PathVariable String cpf) {
+  public ResponseEntity<List<SolicitacaoDTO>> buscarPorSolicitante(@PathVariable String cpf) {
     return ResponseEntity.ok(solicitacaoService.buscarPorSolicitante(cpf));
   }
 
   @PostMapping
-  public ResponseEntity<?> criar(@RequestBody SolicitacaoDto solicitacaoDTO) {
+  public ResponseEntity<?> criar(@RequestBody SolicitacaoDTO solicitacaoDTO) {
     try {
-      SolicitacaoDto nova = solicitacaoService.criar(solicitacaoDTO);
+      SolicitacaoDTO nova = solicitacaoService.criar(solicitacaoDTO);
       return ResponseEntity.status(HttpStatus.CREATED).body(nova);
     } catch (RuntimeException e) {
       Map<String, String> error = new HashMap<>();
@@ -72,7 +72,7 @@ public class SolicitacaoController {
   @PutMapping("/{id}")
   public ResponseEntity<?> atualizar(
       @PathVariable Long id,
-      @RequestBody SolicitacaoDto solicitacaoDTO) {
+      @RequestBody SolicitacaoDTO solicitacaoDTO) {
     try {
       return ResponseEntity.ok(solicitacaoService.atualizar(id, solicitacaoDTO));
     } catch (RuntimeException e) {

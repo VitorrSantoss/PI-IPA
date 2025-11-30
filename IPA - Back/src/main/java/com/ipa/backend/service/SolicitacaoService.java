@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ipa.backend.dto.SolicitacaoDto;
+import com.ipa.backend.dto.SolicitacaoDTO;
 import com.ipa.backend.model.Solicitacao;
 import com.ipa.backend.model.Usuario;
 import com.ipa.backend.model.UsuarioIpa;
@@ -28,27 +28,27 @@ public class SolicitacaoService {
   @Autowired
   private UsuarioRepository usuarioRepository;
 
-  public List<SolicitacaoDto> listarTodas() {
+  public List<SolicitacaoDTO> listarTodas() {
     return solicitacaoRepository.findAll()
         .stream()
         .map(this::convertToDTO)
         .collect(Collectors.toList());
   }
 
-  public List<SolicitacaoDto> listarPorStatus(String status) {
+  public List<SolicitacaoDTO> listarPorStatus(String status) {
     return solicitacaoRepository.findByStatus(status)
         .stream()
         .map(this::convertToDTO)
         .collect(Collectors.toList());
   }
 
-  public SolicitacaoDto buscarPorId(Long id) {
+  public SolicitacaoDTO buscarPorId(Long id) {
     Solicitacao solicitacao = solicitacaoRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
     return convertToDTO(solicitacao);
   }
 
-  public List<SolicitacaoDto> buscarPorSolicitante(String cpf) {
+  public List<SolicitacaoDTO> buscarPorSolicitante(String cpf) {
     return solicitacaoRepository.findBySolicitanteCpf(cpf)
         .stream()
         .map(this::convertToDTO)
@@ -56,7 +56,7 @@ public class SolicitacaoService {
   }
 
   @Transactional
-  public SolicitacaoDto criar(SolicitacaoDto dto) {
+  public SolicitacaoDTO criar(SolicitacaoDTO dto) {
     // Buscar ou criar UsuarioIpa (solicitante)
     UsuarioIpa solicitante = buscarOuCriarUsuarioIpa(dto);
 
@@ -73,7 +73,7 @@ public class SolicitacaoService {
   }
 
   @Transactional
-  public SolicitacaoDto atualizar(Long id, SolicitacaoDto dto) {
+  public SolicitacaoDTO atualizar(Long id, SolicitacaoDTO dto) {
     Solicitacao solicitacao = solicitacaoRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
 
@@ -95,7 +95,7 @@ public class SolicitacaoService {
   }
 
   @Transactional
-  public SolicitacaoDto atualizarStatus(Long id, String novoStatus) {
+  public SolicitacaoDTO atualizarStatus(Long id, String novoStatus) {
     Solicitacao solicitacao = solicitacaoRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
 
@@ -115,7 +115,7 @@ public class SolicitacaoService {
 
   // ===== MÉTODOS AUXILIARES =====
 
-  private UsuarioIpa buscarOuCriarUsuarioIpa(SolicitacaoDto dto) {
+  private UsuarioIpa buscarOuCriarUsuarioIpa(SolicitacaoDTO dto) {
     return usuarioIpaRepository.findByCpf(dto.getSolicitanteCpf())
         .orElseGet(() -> {
           UsuarioIpa novo = new UsuarioIpa();
@@ -129,7 +129,7 @@ public class SolicitacaoService {
         });
   }
 
-  private Usuario buscarOuCriarUsuario(SolicitacaoDto dto) {
+  private Usuario buscarOuCriarUsuario(SolicitacaoDTO dto) {
     return usuarioRepository.findByCpf(dto.getBeneficiarioCpf())
         .orElseGet(() -> {
           Usuario novo = new Usuario();
@@ -150,8 +150,8 @@ public class SolicitacaoService {
 
   // ===== CONVERSÕES =====
 
-  private SolicitacaoDto convertToDTO(Solicitacao solicitacao) {
-    SolicitacaoDto dto = new SolicitacaoDto();
+  private SolicitacaoDTO convertToDTO(Solicitacao solicitacao) {
+    SolicitacaoDTO dto = new SolicitacaoDTO();
 
     dto.setId(solicitacao.getId());
 
@@ -209,13 +209,13 @@ public class SolicitacaoService {
     return dto;
   }
 
-  private Solicitacao convertToEntity(SolicitacaoDto dto) {
+  private Solicitacao convertToEntity(SolicitacaoDTO dto) {
     Solicitacao solicitacao = new Solicitacao();
     atualizarDados(solicitacao, dto);
     return solicitacao;
   }
 
-  private void atualizarDados(Solicitacao solicitacao, SolicitacaoDto dto) {
+  private void atualizarDados(Solicitacao solicitacao, SolicitacaoDTO dto) {
     // Insumo
     solicitacao.setTipoInsumo(dto.getTipoInsumo());
     solicitacao.setCultura(dto.getCultura());
