@@ -48,7 +48,13 @@ const Register = () => {
   };
 
   const validateForm = () => {
-    if (!formData.nome || !formData.cpf || !formData.senha || !formData.email || !formData.telefone) {
+    if (
+      !formData.nome ||
+      !formData.cpf ||
+      !formData.senha ||
+      !formData.email ||
+      !formData.telefone
+    ) {
       toast.error("Preencha todos os campos obrigatórios");
       return false;
     }
@@ -79,37 +85,28 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const dadosRegistro = {
+      await authService.register({
         nome: formData.nome,
         cpf: formData.cpf,
         telefone: formData.telefone,
         email: formData.email,
-        matriculaIpa: formData.matricula || undefined,
-        localAtuacao: formData.localAtuacao || undefined,
+        matriculaIpa: formData.matricula,
+        localAtuacao: formData.localAtuacao,
         senha: formData.senha,
-        cidade: formData.cidade || undefined,
-        uf: formData.estado || undefined,
-      };
+        cidade: formData.cidade,
+        uf: formData.estado, // Mudado de 'estado' para 'uf'
+      });
 
-      console.log("📤 Enviando dados de registro:", dadosRegistro);
-
-      await authService.register(dadosRegistro);
-
-      toast.success("Cadastro realizado com sucesso! Faça login para continuar.");
+      toast.success(
+        "Cadastro realizado com sucesso! Faça login para continuar."
+      );
 
       setTimeout(() => {
         navigate("/login");
       }, 1500);
     } catch (error: any) {
-      console.error("❌ Erro ao cadastrar:", error);
-      console.error("❌ Resposta do servidor:", error.response?.data);
-      
-      const mensagemErro = error.response?.data?.message || 
-                          error.response?.data?.error ||
-                          error.message || 
-                          "Erro ao realizar cadastro";
-      
-      toast.error(mensagemErro);
+      console.error("Erro ao cadastrar:", error);
+      toast.error(error.response?.data?.message || "Erro ao realizar cadastro");
     } finally {
       setLoading(false);
     }
@@ -155,7 +152,9 @@ const Register = () => {
                   <Input
                     id="cpf"
                     value={formData.cpf}
-                    onChange={(e) => handleChange("cpf", formatCPF(e.target.value))}
+                    onChange={(e) =>
+                      handleChange("cpf", formatCPF(e.target.value))
+                    }
                     placeholder="000.000.000-00"
                     maxLength={14}
                     required
@@ -169,7 +168,9 @@ const Register = () => {
                   <Input
                     id="telefone"
                     value={formData.telefone}
-                    onChange={(e) => handleChange("telefone", formatPhone(e.target.value))}
+                    onChange={(e) =>
+                      handleChange("telefone", formatPhone(e.target.value))
+                    }
                     placeholder="(00) 00000-0000"
                     maxLength={15}
                     required
@@ -209,7 +210,9 @@ const Register = () => {
                   <Input
                     id="localAtuacao"
                     value={formData.localAtuacao}
-                    onChange={(e) => handleChange("localAtuacao", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("localAtuacao", e.target.value)
+                    }
                     placeholder="Ex: Escritório Local"
                     disabled={loading}
                   />
@@ -236,7 +239,9 @@ const Register = () => {
                     id="confirmarSenha"
                     type="password"
                     value={formData.confirmarSenha}
-                    onChange={(e) => handleChange("confirmarSenha", e.target.value)}
+                    onChange={(e) =>
+                      handleChange("confirmarSenha", e.target.value)
+                    }
                     placeholder="••••••"
                     required
                     disabled={loading}
@@ -261,7 +266,9 @@ const Register = () => {
                   <Input
                     id="estado"
                     value={formData.estado}
-                    onChange={(e) => handleChange("estado", e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      handleChange("estado", e.target.value.toUpperCase())
+                    }
                     placeholder="PE"
                     maxLength={2}
                     disabled={loading}
@@ -287,7 +294,10 @@ const Register = () => {
               <div className="text-center mt-4">
                 <p className="text-sm text-muted-foreground">
                   Já tem uma conta?{" "}
-                  <Link to="/login" className="text-primary hover:underline font-semibold">
+                  <Link
+                    to="/login"
+                    className="text-primary hover:underline font-semibold"
+                  >
                     Faça login
                   </Link>
                 </p>
