@@ -1,14 +1,15 @@
 package com.ipa.backend.service;
 
-import com.ipa.backend.dto.UsuarioDTO;
-import com.ipa.backend.model.Usuario;
-import com.ipa.backend.repository.UsuarioRepository;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.ipa.backend.dto.UsuarioDTO;
+import com.ipa.backend.model.Usuario;
+import com.ipa.backend.repository.UsuarioRepository;
 
 @Service
 public class UsuarioService {
