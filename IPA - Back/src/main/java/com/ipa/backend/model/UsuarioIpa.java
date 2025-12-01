@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,40 +15,39 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name = "tb_usuarios_ipa")
+@Entity
+@Table(name = "tb_usuarios_ipa")
 public class UsuarioIpa {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(length = 150)
+  @Column(length = 150, nullable = false)
   private String nome;
 
   @CPF
-  @Column
+  @Column(nullable = false, unique = true, length = 14)
   private String cpf;
 
   @Column(length = 20)
   private String telefone;
 
-  @Column
+  @Column(unique = true)
   private String email;
 
-  @Column(length = 9)
+  @Column(length = 20)
   private String matriculaIpa;
 
   @Column
   private String localAtuacao;
 
   @Column(nullable = false)
-  private String senha; // Em produção, fazer hash com BCrypt
+  private String senha;
 
   @Column
   private String cidade;
 
-  @Column(name = "UF")
+  @Column(length = 2)
   private String uf;
-
-
 }

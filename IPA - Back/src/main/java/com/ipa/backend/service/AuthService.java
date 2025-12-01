@@ -1,16 +1,17 @@
 package com.ipa.backend.service;
 
-import com.ipa.backend.dto.LoginDTO;
-import com.ipa.backend.dto.UsuarioIpaDTO;
-import com.ipa.backend.model.UsuarioIpa;
-import com.ipa.backend.repository.UsuarioIpaRepository;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import com.ipa.backend.dto.LoginDTO;
+import com.ipa.backend.dto.UsuarioIpaDTO;
+import com.ipa.backend.model.UsuarioIpa;
+import com.ipa.backend.repository.UsuarioIpaRepository;
 
 @Service
 public class AuthService {
@@ -20,6 +21,15 @@ public class AuthService {
 
     @Transactional
     public Map<String, Object> authenticate(LoginDTO loginDTO) {
+        // Validação de entrada
+        if (loginDTO.getCpf() == null || loginDTO.getCpf().trim().isEmpty()) {
+            throw new RuntimeException("CPF é obrigatório");
+        }
+
+        if (loginDTO.getSenha() == null || loginDTO.getSenha().trim().isEmpty()) {
+            throw new RuntimeException("Senha é obrigatória");
+        }
+
         UsuarioIpa usuario = usuarioIpaRepository.findByCpf(loginDTO.getCpf())
                 .orElseThrow(() -> new RuntimeException("CPF ou senha inválidos"));
 
@@ -40,20 +50,47 @@ public class AuthService {
 
     @Transactional
     public UsuarioIpaDTO register(UsuarioIpaDTO usuarioDTO) {
+        // Validações de entrada
+        if (usuarioDTO.getNome() == null || usuarioDTO.getNome().trim().isEmpty()) {
+            throw new RuntimeException("Nome é obrigatório");
+        }
+
+        if (usuarioDTO.getCpf() == null || usuarioDTO.getCpf().trim().isEmpty()) {
+            throw new RuntimeException("CPF é obrigatório");
+        }
+
+        if (usuarioDTO.getSenha() == null || usuarioDTO.getSenha().length() < 6) {
+            throw new RuntimeException("A senha deve ter no mínimo 6 caracteres");
+        }
+
+        if (usuarioDTO.getEmail() == null || usuarioDTO.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("Email é obrigatório");
+        }
+
+        if (usuarioDTO.getTelefone() == null || usuarioDTO.getTelefone().trim().isEmpty()) {
+            throw new RuntimeException("Telefone é obrigatório");
+        }
+
+        // Verificar se CPF já existe
         if (usuarioIpaRepository.existsByCpf(usuarioDTO.getCpf())) {
             throw new RuntimeException("CPF já cadastrado no sistema");
         }
 
+        // Verificar se email já existe
         if (usuarioDTO.getEmail() != null && !usuarioDTO.getEmail().isEmpty()) {
             if (usuarioIpaRepository.findByEmail(usuarioDTO.getEmail()).isPresent()) {
                 throw new RuntimeException("Email já cadastrado no sistema");
             }
         }
 
-        UsuarioIpa usuario = convertToEntity(usuarioDTO);
-        UsuarioIpa usuarioSalvo = usuarioIpaRepository.save(usuario);
+        try {
+            UsuarioIpa usuario = convertToEntity(usuarioDTO);
+            UsuarioIpa usuarioSalvo = usuarioIpaRepository.save(usuario);
 
-        return convertToDTO(usuarioSalvo);
+            return convertToDTO(usuarioSalvo);
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao cadastrar usuário: " + e.getMessage());
+        }
     }
 
     public boolean validateToken(String token) {
