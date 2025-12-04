@@ -1,20 +1,15 @@
 // src/services/pedidoService.ts
-import axios from 'axios';
 
-// Configuração da API
-const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // ⚠️ Porta do Spring Boot
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export interface Etapa {
+  nome: string;
+  descricao: string;
+  concluida: boolean;
+}
 
-// Interface do Pedido (deve corresponder ao que o backend retorna)
 export interface Pedido {
-  id: number;
   numeroRastreio: string;
   dataSolicitacao: string;
+  status: string;
   previsaoDespacho: string;
   cultura: string;
   variedade: string;
@@ -25,125 +20,138 @@ export interface Pedido {
   enderecoEntrega: string;
   municipio: string;
   prazoFinal: string;
-  status: string;
-  etapas: Array<{
-    nome: string;
-    descricao: string;
-    concluida: boolean;
-  }>;
+  etapas: Etapa[];
 }
 
-export interface PedidoDTO {
-  id: number;
-  numeroRastreio: string;
-  usuarioId: number;
-  usuarioNome: string;
-  produtoId: number;
-  produtoNome: string;
-  quantidade: number;
-  valorTotal: number;
-  status: string;
-  dataPedido: string;
-  dataEntrega?: string;
-  observacoes?: string;
+export interface ApiResponse<T> {
+  data: T;
+  status: number;
 }
 
-export const pedidoService = {
-  // Rastrear pedido por código
-  rastrear: async (codigo: string) => {
-    console.log('🔍 Buscando código:', codigo);
-    
+const API_BASE_URL = "http://localhost:8080/api";
+
+class PedidoService {
+  /**
+   * Rastreia um pedido pelo código de rastreamento
+   * @param codigoRastreio - Código único do pedido (ex: SAFRA-2025-A1B2C3D4)
+   * @returns Promise com os dados do pedido
+   */
+  async rastrear(codigoRastreio: string): Promise<ApiResponse<Pedido>> {
     try {
-      // O backend retorna o objeto diretamente, não dentro de { data: ... }
-      const response = await api.get(`/pedidos/rastrear/${codigo}`);
+      console.log(`🔍 Buscando pedido: ${codigoRastreio}`);
       
-      console.log('✅ Resposta recebida:', response);
-      console.log('📦 Dados do pedido:', response.data);
+      const response = await fetch(
+        `${API_BASE_URL}/solicitacoes/rastrear/${codigoRastreio}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+        }
+      );
+
+      console.log(`📡 Status da resposta: ${response.status}`);
+
+      // CORREÇÃO: Aceitar tanto 200 quanto 201 como sucesso
+      if (response.ok || response.status === 201) {
+        const data = await response.json();
+        console.log("✅ Dados recebidos:", data);
+
+        return {
+          data: data,
+          status: response.status,
+        };
+      }
+
+      // Tratamento de erros específicos
+      if (response.status === 404) {
+        throw new Error("Pedido não encontrado. Verifique o código de rastreamento.");
+      }
+
+      if (response.status === 500) {
+        throw new Error("Erro no servidor. Tente novamente mais tarde.");
+      }
+
+      // Tentar ler mensagem de erro do backend
+      const errorData = await response.json().catch(() => null);
+      const errorMessage = errorData?.message || `Erro ${response.status}: ${response.statusText}`;
       
-      // O Axios já coloca a resposta em response.data
-      // Então retornamos { data: response.data } para manter compatibilidade
-      return { data: response.data };
-      
-    } catch (error: any) {
-      console.error('❌ Erro ao buscar pedido:', error);
-      console.error('📄 Resposta do erro:', error.response);
+      throw new Error(errorMessage);
+
+    } catch (error) {
+      console.error("❌ Erro ao rastrear pedido:", error);
+
+      // Se for um erro de rede
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw {
+          message: "Não foi possível conectar ao servidor. Verifique se o backend está rodando.",
+          request: true,
+        };
+      }
+
+      // Re-lançar o erro para ser tratado no componente
       throw error;
     }
-  },
-
-  // Listar todos os pedidos (com paginação)
-  listarTodos: async (page = 0, size = 10) => {
-    const response = await api.get('/pedidos', {
-      params: { page, size }
-    });
-    return response.data;
-  },
-
-  // Buscar pedido por ID
-  buscarPorId: async (id: number) => {
-    const response = await api.get(`/pedidos/${id}`);
-    return response.data;
-  },
-
-  // Listar pedidos por status
-  listarPorStatus: async (status: string) => {
-    const response = await api.get(`/pedidos/status/${status}`);
-    return response.data;
-  },
-
-  // Listar pedidos de um usuário
-  listarPorUsuario: async (usuarioId: number) => {
-    const response = await api.get(`/pedidos/usuario/${usuarioId}`);
-    return response.data;
-  },
-
-  // Criar novo pedido
-  criar: async (pedido: Partial<PedidoDTO>) => {
-    const response = await api.post('/pedidos', pedido);
-    return response.data;
-  },
-
-  // Atualizar status do pedido
-  atualizarStatus: async (id: number, status: string) => {
-    const response = await api.patch(`/pedidos/${id}/status`, null, {
-      params: { status }
-    });
-    return response.data;
-  },
-
-  // Deletar pedido
-  deletar: async (id: number) => {
-    await api.delete(`/pedidos/${id}`);
-  },
-};
-
-// Adicionar interceptor para debug
-api.interceptors.request.use(
-  (config) => {
-    console.log('🚀 Requisição:', config.method?.toUpperCase(), config.url);
-    return config;
-  },
-  (error) => {
-    console.error('❌ Erro na requisição:', error);
-    return Promise.reject(error);
   }
-);
 
-api.interceptors.response.use(
-  (response) => {
-    console.log('✅ Resposta recebida:', response.status, response.config.url);
-    return response;
-  },
-  (error) => {
-    if (error.response) {
-      console.error('❌ Erro na resposta:', error.response.status, error.response.data);
-    } else if (error.request) {
-      console.error('❌ Sem resposta do servidor:', error.request);
-    } else {
-      console.error('❌ Erro:', error.message);
+  /**
+   * Lista todos os pedidos (para uso futuro)
+   */
+  async listarTodos(): Promise<ApiResponse<Pedido[]>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/solicitacoes`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok || response.status === 201) {
+        const data = await response.json();
+        return {
+          data: data,
+          status: response.status,
+        };
+      }
+
+      throw new Error(`Erro ao listar pedidos: ${response.statusText}`);
+    } catch (error) {
+      console.error("Erro ao listar pedidos:", error);
+      throw error;
     }
-    return Promise.reject(error);
   }
-);
 
-export default api;
+  /**
+   * Busca pedido por ID (para uso futuro)
+   */
+  async buscarPorId(id: number): Promise<ApiResponse<Pedido>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/solicitacoes/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok || response.status === 201) {
+        const data = await response.json();
+        return {
+          data: data,
+          status: response.status,
+        };
+      }
+
+      throw new Error(`Erro ao buscar pedido: ${response.statusText}`);
+    } catch (error) {
+      console.error("Erro ao buscar pedido por ID:", error);
+      throw error;
+    }
+  }
+}
+
+// Exportar instância única do serviço
+export const pedidoService = new PedidoService();
+
+// Exportar também a classe para uso em testes
+export default PedidoService;

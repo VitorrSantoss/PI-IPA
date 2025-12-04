@@ -1,7 +1,5 @@
 package com.ipa.backend.model;
 
-import org.hibernate.validator.constraints.br.CPF;
-
 import com.ipa.backend.constants.TipoPropriedade;
 
 import jakarta.persistence.Column;
@@ -31,14 +29,13 @@ public class Usuario {
     @Column(nullable = false)
     private String nome;
 
-    @CPF
+    // ✅ Removida validação @CPF para permitir criação automática
     @Column(nullable = false, unique = true, length = 14, name = "CPF")
     private String cpf;
 
     @Column(length = 9, name = "CadastroNacional")
     private String caf;
 
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private TipoPropriedade tipoPropriedade;
 

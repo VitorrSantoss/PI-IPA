@@ -27,11 +27,8 @@ const Beneficiarios = () => {
       <section className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-6">
           <nav className="flex gap-8 py-4">
-            <Link to="/projeto" className="text-muted-foreground hover:text-primary">
-              Sobre o projeto
-            </Link>
             <Link to="/projeto/beneficiarios" className="font-semibold text-primary border-b-2 border-primary pb-1">
-              Beneficiários
+              Parceiros
             </Link>
           </nav>
         </div>

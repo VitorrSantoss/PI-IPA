@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +31,9 @@ public class PedidoService {
     @Autowired
     private ProdutoRepository produtoRepository;
 
+    private static final String CARACTERES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final SecureRandom random = new SecureRandom();
+
     public Page<PedidoDTO> listarTodos(Pageable pageable) {
         return pedidoRepository.findAll(pageable).map(this::convertToDTO);
     }
@@ -43,7 +46,7 @@ public class PedidoService {
 
     public PedidoDTO rastrearPorCodigo(String codigo) {
         Pedido pedido = pedidoRepository.findByNumeroRastreio(codigo)
-                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado com o código: " + codigo));
         return convertToDTO(pedido);
     }
 
@@ -75,7 +78,10 @@ public class PedidoService {
         }
 
         Pedido pedido = new Pedido();
-        pedido.setNumeroRastreio(gerarCodigoRastreio());
+        
+        // ✅ Gerar código de rastreio único
+        pedido.setNumeroRastreio(gerarCodigoRastreioUnico());
+        
         pedido.setUsuario(usuario);
         pedido.setProduto(produto);
         pedido.setQuantidade(pedidoDTO.getQuantidade());
@@ -112,9 +118,46 @@ public class PedidoService {
         pedidoRepository.deleteById(id);
     }
 
+    /**
+     * Gera um código de rastreio único no formato: SAFRA-2025-XXXXXXXX
+     * Onde XXXXXXXX são 8 caracteres alfanuméricos aleatórios
+     * Garante que o código não existe no banco de dados
+     */
+    private String gerarCodigoRastreioUnico() {
+        String codigo;
+        int tentativas = 0;
+        int maxTentativas = 10;
+
+        do {
+            codigo = gerarCodigoRastreio();
+            tentativas++;
+            
+            // Proteção contra loop infinito (muito improvável)
+            if (tentativas >= maxTentativas) {
+                throw new RuntimeException("Erro ao gerar código de rastreio único. Tente novamente.");
+            }
+            
+        } while (pedidoRepository.findByNumeroRastreio(codigo).isPresent());
+
+        return codigo;
+    }
+
+    /**
+     * Gera o código no formato: SAFRA-2025-XXXXXXXX
+     * Exemplo: SAFRA-2025-K7L8M9N0
+     */
     private String gerarCodigoRastreio() {
-        return "SAFRA-" + LocalDateTime.now().getYear() + "-" +
-                UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        int ano = LocalDateTime.now().getYear();
+        StringBuilder codigo = new StringBuilder("SAFRA-");
+        codigo.append(ano).append("-");
+        
+        // Gerar 8 caracteres alfanuméricos aleatórios
+        for (int i = 0; i < 8; i++) {
+            int index = random.nextInt(CARACTERES.length());
+            codigo.append(CARACTERES.charAt(index));
+        }
+        
+        return codigo.toString();
     }
 
     private PedidoDTO convertToDTO(Pedido pedido) {

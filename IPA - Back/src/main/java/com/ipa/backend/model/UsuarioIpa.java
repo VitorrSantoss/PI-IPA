@@ -1,7 +1,5 @@
 package com.ipa.backend.model;
 
-import org.hibernate.validator.constraints.br.CPF;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -26,7 +24,7 @@ public class UsuarioIpa {
   @Column(length = 150, nullable = false)
   private String nome;
 
-  @CPF
+  // ✅ Removida validação @CPF para permitir criação automática
   @Column(nullable = false, unique = true, length = 14)
   private String cpf;
 

@@ -1,12 +1,15 @@
 package com.ipa.backend.service;
 
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ipa.backend.dto.SolicitacaoDTO;
+import com.ipa.backend.dto.SolicitacaoDto;
+import com.ipa.backend.dto.SolicitacaoDto;
 import com.ipa.backend.model.Solicitacao;
 import com.ipa.backend.model.Usuario;
 import com.ipa.backend.model.UsuarioIpa;
@@ -28,35 +31,47 @@ public class SolicitacaoService {
   @Autowired
   private UsuarioRepository usuarioRepository;
 
-  public List<SolicitacaoDTO> listarTodas() {
+  private static final String CARACTERES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  private static final SecureRandom random = new SecureRandom();
+
+  public List<SolicitacaoDto> listarTodas() {
     return solicitacaoRepository.findAll()
         .stream()
         .map(this::convertToDTO)
         .collect(Collectors.toList());
   }
 
-  public List<SolicitacaoDTO> listarPorStatus(String status) {
+  public List<SolicitacaoDto> listarPorStatus(String status) {
     return solicitacaoRepository.findByStatus(status)
         .stream()
         .map(this::convertToDTO)
         .collect(Collectors.toList());
   }
 
-  public SolicitacaoDTO buscarPorId(Long id) {
+  public SolicitacaoDto buscarPorId(Long id) {
     Solicitacao solicitacao = solicitacaoRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
     return convertToDTO(solicitacao);
   }
 
-  public List<SolicitacaoDTO> buscarPorSolicitante(String cpf) {
+  public List<SolicitacaoDto> buscarPorSolicitante(String cpf) {
     return solicitacaoRepository.findBySolicitanteCpf(cpf)
         .stream()
         .map(this::convertToDTO)
         .collect(Collectors.toList());
   }
 
+  /**
+   * 🔍 NOVO: Buscar solicitação por código de rastreio
+   */
+  public SolicitacaoDto buscarPorCodigoRastreio(String codigoRastreio) {
+    Solicitacao solicitacao = solicitacaoRepository.findByCodigoRastreio(codigoRastreio)
+        .orElseThrow(() -> new RuntimeException("Solicitação não encontrada com o código: " + codigoRastreio));
+    return convertToDTO(solicitacao);
+  }
+
   @Transactional
-  public SolicitacaoDTO criar(SolicitacaoDTO dto) {
+  public SolicitacaoDto criar(SolicitacaoDto dto) {
     // Buscar ou criar UsuarioIpa (solicitante)
     UsuarioIpa solicitante = buscarOuCriarUsuarioIpa(dto);
 
@@ -68,12 +83,15 @@ public class SolicitacaoService {
     solicitacao.setSolicitante(solicitante);
     solicitacao.setBeneficiario(beneficiario);
 
+    // ✅ NOVO: Gerar código de rastreio único automaticamente
+    solicitacao.setCodigoRastreio(gerarCodigoRastreioUnico());
+
     Solicitacao salva = solicitacaoRepository.save(solicitacao);
     return convertToDTO(salva);
   }
 
   @Transactional
-  public SolicitacaoDTO atualizar(Long id, SolicitacaoDTO dto) {
+  public SolicitacaoDto atualizar(Long id, SolicitacaoDto dto) {
     Solicitacao solicitacao = solicitacaoRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
 
@@ -95,7 +113,7 @@ public class SolicitacaoService {
   }
 
   @Transactional
-  public SolicitacaoDTO atualizarStatus(Long id, String novoStatus) {
+  public SolicitacaoDto atualizarStatus(Long id, String novoStatus) {
     Solicitacao solicitacao = solicitacaoRepository.findById(id)
         .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
 
@@ -113,9 +131,49 @@ public class SolicitacaoService {
     solicitacaoRepository.deleteById(id);
   }
 
+  // ===== MÉTODOS DE GERAÇÃO DE CÓDIGO =====
+
+  /**
+   * Gera um código de rastreio único no formato: SAFRA-2025-XXXXXXXX
+   */
+  private String gerarCodigoRastreioUnico() {
+    String codigo;
+    int tentativas = 0;
+    int maxTentativas = 10;
+
+    do {
+      codigo = gerarCodigoRastreio();
+      tentativas++;
+
+      if (tentativas >= maxTentativas) {
+        throw new RuntimeException("Erro ao gerar código de rastreio único. Tente novamente.");
+      }
+
+    } while (solicitacaoRepository.findByCodigoRastreio(codigo).isPresent());
+
+    return codigo;
+  }
+
+  /**
+   * Gera o código no formato: SAFRA-2025-XXXXXXXX
+   */
+  private String gerarCodigoRastreio() {
+    int ano = LocalDateTime.now().getYear();
+    StringBuilder codigo = new StringBuilder("SAFRA-");
+    codigo.append(ano).append("-");
+
+    // Gerar 8 caracteres alfanuméricos aleatórios
+    for (int i = 0; i < 8; i++) {
+      int index = random.nextInt(CARACTERES.length());
+      codigo.append(CARACTERES.charAt(index));
+    }
+
+    return codigo.toString();
+  }
+
   // ===== MÉTODOS AUXILIARES =====
 
-  private UsuarioIpa buscarOuCriarUsuarioIpa(SolicitacaoDTO dto) {
+  private UsuarioIpa buscarOuCriarUsuarioIpa(SolicitacaoDto dto) {
     return usuarioIpaRepository.findByCpf(dto.getSolicitanteCpf())
         .orElseGet(() -> {
           UsuarioIpa novo = new UsuarioIpa();
@@ -129,7 +187,7 @@ public class SolicitacaoService {
         });
   }
 
-  private Usuario buscarOuCriarUsuario(SolicitacaoDTO dto) {
+  private Usuario buscarOuCriarUsuario(SolicitacaoDto dto) {
     return usuarioRepository.findByCpf(dto.getBeneficiarioCpf())
         .orElseGet(() -> {
           Usuario novo = new Usuario();
@@ -150,8 +208,8 @@ public class SolicitacaoService {
 
   // ===== CONVERSÕES =====
 
-  private SolicitacaoDTO convertToDTO(Solicitacao solicitacao) {
-    SolicitacaoDTO dto = new SolicitacaoDTO();
+  private SolicitacaoDto convertToDTO(Solicitacao solicitacao) {
+    SolicitacaoDto dto = new SolicitacaoDto();
 
     dto.setId(solicitacao.getId());
 
@@ -204,18 +262,19 @@ public class SolicitacaoService {
     dto.setDataCriacao(solicitacao.getDataCriacao());
     dto.setDataAtualizacao(solicitacao.getDataAtualizacao());
     dto.setPedidoId(solicitacao.getPedidoId());
+    dto.setCodigoRastreio(solicitacao.getCodigoRastreio()); // ✅ NOVO
     dto.setObservacoes(solicitacao.getObservacoes());
 
     return dto;
   }
 
-  private Solicitacao convertToEntity(SolicitacaoDTO dto) {
+  private Solicitacao convertToEntity(SolicitacaoDto dto) {
     Solicitacao solicitacao = new Solicitacao();
     atualizarDados(solicitacao, dto);
     return solicitacao;
   }
 
-  private void atualizarDados(Solicitacao solicitacao, SolicitacaoDTO dto) {
+  private void atualizarDados(Solicitacao solicitacao, SolicitacaoDto dto) {
     // Insumo
     solicitacao.setTipoInsumo(dto.getTipoInsumo());
     solicitacao.setCultura(dto.getCultura());

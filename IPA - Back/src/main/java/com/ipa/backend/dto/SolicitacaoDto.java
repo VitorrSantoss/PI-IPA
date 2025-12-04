@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SolicitacaoDTO {
+public class SolicitacaoDto {
 
   private Long id;
 
@@ -60,5 +60,9 @@ public class SolicitacaoDTO {
   private LocalDateTime dataCriacao;
   private LocalDateTime dataAtualizacao;
   private Long pedidoId;
+  
+  // ✅ NOVO: Código de rastreio
+  private String codigoRastreio;
+  
   private String observacoes;
 }

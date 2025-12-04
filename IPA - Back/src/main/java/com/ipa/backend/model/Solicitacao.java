@@ -10,10 +10,12 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,7 +23,15 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity(name = "tb_solicitacoes")
+@Entity
+@Table(
+  name = "tb_solicitacoes",
+  indexes = {
+    @Index(name = "idx_codigo_rastreio", columnList = "codigo_rastreio"),
+    @Index(name = "idx_status", columnList = "status"),
+    @Index(name = "idx_data_criacao", columnList = "data_criacao")
+  }
+)
 public class Solicitacao {
 
   @Id
@@ -54,8 +64,7 @@ public class Solicitacao {
   @Column(name = "local_atuacao")
   private String localAtuacao;
 
-  // ===== DADOS DO AGRICULTOR BENEFICIADO (campos duplicados para performance)
-  // =====
+  // ===== DADOS DO AGRICULTOR BENEFICIADO (campos duplicados para performance) =====
   @Column(name = "beneficiario_nome", nullable = false)
   private String beneficiarioNome;
 
@@ -139,6 +148,10 @@ public class Solicitacao {
 
   @Column(name = "pedido_id")
   private Long pedidoId;
+
+  // ✅ CÓDIGO DE RASTREIO - Hibernate criará esta coluna automaticamente
+  @Column(name = "codigo_rastreio", unique = true, length = 30)
+  private String codigoRastreio;
 
   @Column(columnDefinition = "TEXT")
   private String observacoes;

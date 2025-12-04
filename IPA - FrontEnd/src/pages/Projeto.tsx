@@ -27,9 +27,6 @@ const Projeto = () => {
             <Link to="/projeto" className="font-semibold text-primary border-b-2 border-primary pb-1">
               Sobre o projeto
             </Link>
-            <Link to="/projeto/beneficiarios" className="text-muted-foreground hover:text-primary">
-              Beneficiários
-            </Link>
           </nav>
         </div>
       </section>

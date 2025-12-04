@@ -7,10 +7,12 @@ import {
   Check,
   Loader2,
   Download,
+  AlertCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import vegetablesHero from "@/assets/vegetables-hero.jpg";
@@ -23,6 +25,58 @@ const Rastreamento = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [geratingPDF, setGerandoPDF] = useState(false);
+
+  // Função auxiliar para formatar datas
+  const formatarData = (dataString: string | undefined | null): string => {
+    if (!dataString) return "Não informado";
+    
+    try {
+      const data = new Date(dataString);
+      
+      // Verifica se a data é válida
+      if (isNaN(data.getTime())) {
+        return "Data inválida";
+      }
+      
+      return data.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    } catch (error) {
+      console.error("Erro ao formatar data:", error);
+      return "Data inválida";
+    }
+  };
+
+  // Função auxiliar para formatar data completa
+  const formatarDataCompleta = (dataString: string | undefined | null): string => {
+    if (!dataString) return "Não informado";
+    
+    try {
+      const data = new Date(dataString);
+      
+      if (isNaN(data.getTime())) {
+        return "Data inválida";
+      }
+      
+      return data.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+    } catch (error) {
+      return "Data inválida";
+    }
+  };
+
+  // Função para garantir que o valor não seja undefined/null
+  const exibirValor = (valor: any, valorPadrao: string = "Não informado"): string => {
+    if (valor === undefined || valor === null || valor === "") {
+      return valorPadrao;
+    }
+    return String(valor);
+  };
 
   // Carregar pedido da URL (se houver)
   useEffect(() => {
@@ -53,6 +107,16 @@ const Rastreamento = () => {
       console.log("📦 Dados do pedido:", response.data);
 
       if (response.data) {
+        // Log detalhado dos dados recebidos
+        console.log("📋 Campos recebidos:", {
+          numeroRastreio: response.data.numeroRastreio,
+          dataSolicitacao: response.data.dataSolicitacao,
+          previsaoDespacho: response.data.previsaoDespacho,
+          prazoFinal: response.data.prazoFinal,
+          produtor: response.data.produtor,
+          // beneficiarioNome: response.data.beneficiarioNome, // Removido pois não existe na tipagem Pedido
+        });
+
         setPedido(response.data);
       } else {
         setError("Pedido não encontrado");
@@ -60,15 +124,17 @@ const Rastreamento = () => {
     } catch (err: any) {
       console.error("❌ Erro capturado:", err);
 
-      if (err.response) {
-        const message = err.response.data?.message || "Pedido não encontrado";
-        setError(message);
-      } else if (err.request) {
+      if (err.request) {
         setError(
           "Servidor não está respondendo. Verifique se o backend está rodando na porta 8080"
         );
+      } else if (err.response) {
+        const message = err.response.data?.message || err.message || "Pedido não encontrado";
+        setError(message);
+      } else if (err.message) {
+        setError(err.message);
       } else {
-        setError("Erro ao buscar pedido: " + err.message);
+        setError("Erro desconhecido ao buscar pedido");
       }
 
       setPedido(null);
@@ -103,14 +169,12 @@ const Rastreamento = () => {
       const margin = 15;
       const maxWidth = pageWidth - 2 * margin;
 
-      // Função auxiliar para adicionar linha
       const addLine = () => {
         doc.setDrawColor(200, 200, 200);
         doc.line(margin, yPosition, pageWidth - margin, yPosition);
         yPosition += 5;
       };
 
-      // Função auxiliar para verificar se precisa nova página
       const checkNewPage = (space: number) => {
         if (yPosition + space > pageHeight - 15) {
           doc.addPage();
@@ -131,7 +195,7 @@ const Rastreamento = () => {
 
       addLine();
 
-      // Seção: Informações Gerais
+      // Informações Gerais
       checkNewPage(40);
       doc.setFontSize(12);
       doc.setTextColor(0, 128, 0);
@@ -142,15 +206,18 @@ const Rastreamento = () => {
       doc.setTextColor(0, 0, 0);
 
       const infoGeral = [
-        { label: "Número de Rastreio:", value: pedido.numeroRastreio },
+        { 
+          label: "Número de Rastreio:", 
+          value: exibirValor(pedido.numeroRastreio || pedido.numeroRastreio)
+        },
         {
           label: "Data da Solicitação:",
-          value: new Date(pedido.dataSolicitacao).toLocaleDateString("pt-BR"),
+          value: formatarData(pedido.dataSolicitacao || pedido.dataSolicitacao),
         },
-        { label: "Status:", value: pedido.status.replace("_", " ") },
+        { label: "Status:", value: exibirValor(pedido.status).replace("_", " ") },
         {
           label: "Previsão de Despacho:",
-          value: new Date(pedido.previsaoDespacho).toLocaleDateString("pt-BR"),
+          value: formatarData(pedido.previsaoDespacho),
         },
       ];
 
@@ -166,7 +233,7 @@ const Rastreamento = () => {
       yPosition += 5;
       addLine();
 
-      // Seção: Detalhes do Insumo
+      // Detalhes do Insumo
       checkNewPage(40);
       doc.setFontSize(12);
       doc.setTextColor(0, 128, 0);
@@ -179,13 +246,13 @@ const Rastreamento = () => {
       const infoInsumo = [
         {
           label: "Cultura Solicitada:",
-          value: `${pedido.cultura} (${pedido.variedade})`,
+          value: `${exibirValor(pedido.cultura)} (${exibirValor(pedido.variedade)})`,
         },
         {
           label: "Quantidade:",
-          value: `${pedido.quantidade} ${pedido.unidade}`,
+          value: `${exibirValor(pedido.quantidade)} ${exibirValor(pedido.unidade, "un")}`,
         },
-        { label: "Status de Estoque:", value: pedido.statusEstoque },
+        { label: "Status de Estoque:", value: exibirValor(pedido.statusEstoque) },
       ];
 
       infoInsumo.forEach((info) => {
@@ -194,7 +261,6 @@ const Rastreamento = () => {
         doc.setFont(undefined, "normal");
         const textWidth = doc.getTextWidth(info.label) + 5;
 
-        // Quebra texto longo
         const wrappedText = doc.splitTextToSize(
           info.value,
           maxWidth - textWidth
@@ -206,7 +272,7 @@ const Rastreamento = () => {
       yPosition += 5;
       addLine();
 
-      // Seção: Local de Retirada/Entrega
+      // Local de Retirada/Entrega
       checkNewPage(50);
       doc.setFontSize(12);
       doc.setTextColor(0, 128, 0);
@@ -217,12 +283,24 @@ const Rastreamento = () => {
       doc.setTextColor(0, 0, 0);
 
       const infoLogistica = [
-        { label: "Produtor/Destinatário:", value: pedido.produtor },
-        { label: "Endereço:", value: pedido.enderecoEntrega },
-        { label: "Município:", value: pedido.municipio },
+        { 
+          label: "Produtor/Destinatário:", 
+          value: exibirValor(
+            pedido.produtor || 
+            pedido.produtor
+          )
+        },
+        { 
+          label: "Endereço:", 
+          value: exibirValor(pedido.enderecoEntrega || pedido.enderecoEntrega) 
+        },
+        { 
+          label: "Município:", 
+          value: exibirValor(pedido.municipio || pedido.municipio) 
+        },
         {
           label: "Prazo Final:",
-          value: new Date(pedido.prazoFinal).toLocaleDateString("pt-BR"),
+          value: formatarData(pedido.prazoFinal),
         },
       ];
 
@@ -243,39 +321,41 @@ const Rastreamento = () => {
       yPosition += 5;
       addLine();
 
-      // Seção: Status das Etapas
-      checkNewPage(50);
-      doc.setFontSize(12);
-      doc.setTextColor(0, 128, 0);
-      doc.text("ETAPAS DO RASTREAMENTO", margin, yPosition);
-      yPosition += 8;
+      // Status das Etapas
+      if (pedido.etapas && pedido.etapas.length > 0) {
+        checkNewPage(50);
+        doc.setFontSize(12);
+        doc.setTextColor(0, 128, 0);
+        doc.text("ETAPAS DO RASTREAMENTO", margin, yPosition);
+        yPosition += 8;
 
-      doc.setFontSize(9);
+        doc.setFontSize(9);
 
-      pedido.etapas.forEach((etapa, index) => {
-        checkNewPage(15);
+        pedido.etapas.forEach((etapa, index) => {
+          checkNewPage(15);
 
-        const status = etapa.concluida ? "SIM" : "NAO";
-        const statusColor = etapa.concluida
-          ? { r: 0, g: 128, b: 0 }
-          : { r: 150, g: 150, b: 150 };
+          const status = etapa.concluida ? "✓" : "○";
+          const statusColor = etapa.concluida
+            ? { r: 0, g: 128, b: 0 }
+            : { r: 150, g: 150, b: 150 };
 
-        doc.setTextColor(statusColor.r, statusColor.g, statusColor.b);
-        doc.setFont("Helvetica", "bold");
-        doc.text(
-          `${index + 1}. [${status}] ${etapa.nome}`,
-          margin + 5,
-          yPosition
-        );
+          doc.setTextColor(statusColor.r, statusColor.g, statusColor.b);
+          doc.setFont("Helvetica", "bold");
+          doc.text(
+            `${index + 1}. ${status} ${etapa.nome}`,
+            margin + 5,
+            yPosition
+          );
 
-        doc.setTextColor(100, 100, 100);
-        doc.setFont("Helvetica", "normal");
-        yPosition += 6;
+          doc.setTextColor(100, 100, 100);
+          doc.setFont("Helvetica", "normal");
+          yPosition += 6;
 
-        const wrappedDesc = doc.splitTextToSize(etapa.descricao, maxWidth - 10);
-        doc.text(wrappedDesc, margin + 10, yPosition);
-        yPosition += wrappedDesc.length * 5 + 3;
-      });
+          const wrappedDesc = doc.splitTextToSize(etapa.descricao, maxWidth - 10);
+          doc.text(wrappedDesc, margin + 10, yPosition);
+          yPosition += wrappedDesc.length * 5 + 3;
+        });
+      }
 
       // Rodapé
       yPosition += 5;
@@ -285,15 +365,14 @@ const Rastreamento = () => {
       doc.setTextColor(150, 150, 150);
       const dataGeracao = new Date().toLocaleDateString("pt-BR");
       doc.text(
-        `Documento gerado em: ${dataGeracao} às ${new Date().toLocaleTimeString(
-          "pt-BR"
-        )}`,
+        `Documento gerado em: ${dataGeracao} às ${new Date().toLocaleTimeString("pt-BR")}`,
         margin,
         yPosition
       );
 
       // Salvar PDF
-      doc.save(`Rastreamento_${pedido.numeroRastreio}.pdf`);
+      const numeroRastreio = pedido.numeroRastreio || pedido.numeroRastreio || "SemCodigo";
+      doc.save(`Rastreamento_${numeroRastreio}.pdf`);
       setGerandoPDF(false);
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
@@ -306,6 +385,7 @@ const Rastreamento = () => {
     const colors: Record<string, string> = {
       PENDENTE: "bg-yellow-500",
       EM_ANALISE: "bg-blue-500",
+      ENVIADA: "bg-blue-600",
       APROVADO: "bg-green-500",
       EM_ROTA: "bg-purple-500",
       ENTREGUE: "bg-emerald-500",
@@ -329,7 +409,7 @@ const Rastreamento = () => {
         <div className="relative z-10 text-center text-primary-foreground px-6">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             Rastreamento de Insumos
-            {pedido && ` - Nº ${pedido.numeroRastreio}`}
+            {pedido && ` - Nº ${exibirValor(pedido.numeroRastreio || pedido.numeroRastreio)}`}
           </h1>
           <p className="text-lg">
             Acompanhe a logística, o status de fiscalização e o trajeto
@@ -349,11 +429,11 @@ const Rastreamento = () => {
                   placeholder="Digite o código de rastreamento"
                   className="pl-10 bg-[hsl(var(--light-green))]"
                   value={codigoBusca}
-                  onChange={(e) => setCodigoBusca(e.target.value)}
+                  onChange={(e) => setCodigoBusca(e.target.value.toUpperCase())}
                   disabled={loading}
                 />
               </div>
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading || !codigoBusca.trim()}>
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
@@ -362,38 +442,41 @@ const Rastreamento = () => {
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mt-2">
-              Exemplo: SAFRA-2025-A1B2C3D4
+              Exemplo: SAFRA-2025-9JV1Q012
             </p>
           </form>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-              <div className="flex items-start gap-2">
-                <span className="text-xl">⚠️</span>
-                <div>
-                  <p className="font-semibold">Erro ao buscar pedido</p>
-                  <p className="text-sm mt-1">{error}</p>
-                  {error.includes("porta 8080") && (
-                    <div className="mt-2 text-xs bg-red-100 p-2 rounded">
-                      <p className="font-semibold">Verifique:</p>
-                      <ul className="list-disc ml-4 mt-1">
-                        <li>O backend está rodando? (mvn spring-boot:run)</li>
-                        <li>A URL está correta? (http://localhost:8080)</li>
-                        <li>O banco de dados está configurado?</li>
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <Alert variant="destructive" className="mb-8">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Erro ao buscar pedido</AlertTitle>
+              <AlertDescription>
+                <p className="mt-2">{error}</p>
+                {error.includes("porta 8080") && (
+                  <div className="mt-3 text-xs bg-red-100 text-red-900 p-3 rounded">
+                    <p className="font-semibold mb-2">Verifique:</p>
+                    <ul className="list-disc ml-4 space-y-1">
+                      <li>O backend está rodando? (mvn spring-boot:run)</li>
+                      <li>A URL está correta? (http://localhost:8080)</li>
+                      <li>O banco de dados está configurado?</li>
+                    </ul>
+                  </div>
+                )}
+              </AlertDescription>
+            </Alert>
           )}
 
           {/* Loading */}
           {loading && (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <span className="ml-2">Buscando pedido...</span>
+            <div className="flex flex-col justify-center items-center py-12 space-y-4">
+              <Loader2 className="w-12 h-12 animate-spin text-primary" />
+              <div className="text-center">
+                <p className="font-semibold text-lg">Buscando pedido...</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Aguarde enquanto consultamos o banco de dados
+                </p>
+              </div>
             </div>
           )}
 
@@ -406,6 +489,7 @@ const Rastreamento = () => {
                   onClick={gerarPDF}
                   disabled={geratingPDF}
                   className="gap-2"
+                  variant="outline"
                 >
                   {geratingPDF ? (
                     <>
@@ -422,150 +506,186 @@ const Rastreamento = () => {
               </div>
 
               {/* Status Overview */}
-              <div className="mb-8 space-y-2">
-                <div className="flex items-center gap-4">
-                  <span className="text-primary font-semibold">
-                    Número de Rastreio:
-                  </span>
-                  <span className="font-mono">{pedido.numeroRastreio}</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-primary font-semibold">
-                    Data da Solicitação:
-                  </span>
-                  <span>
-                    {new Date(pedido.dataSolicitacao).toLocaleDateString(
-                      "pt-BR"
-                    )}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-primary font-semibold">
-                    Status de Processamento:
-                  </span>
-                  <Badge
-                    className={`${getStatusColor(
-                      pedido.status
-                    )} hover:opacity-90`}
-                  >
-                    {pedido.status.replace("_", " ")}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-primary font-semibold">
-                    Previsão de Despacho:
-                  </span>
-                  <span>
-                    {new Date(pedido.previsaoDespacho).toLocaleDateString(
-                      "pt-BR"
-                    )}
-                  </span>
+              <div className="mb-8 bg-gradient-to-br from-green-50 to-white p-6 rounded-lg border-2 border-primary/20 shadow-sm">
+                <h2 className="text-2xl font-bold text-primary mb-6 flex items-center gap-2">
+                  <Package className="w-6 h-6" />
+                  Informações da Solicitação
+                </h2>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4 p-3 bg-white rounded-lg">
+                    <span className="text-primary font-semibold min-w-[200px] text-sm">
+                      Número de Rastreio:
+                    </span>
+                    <span className="font-mono bg-gray-100 px-4 py-2 rounded border border-gray-300 text-sm font-semibold">
+                      {exibirValor(pedido.numeroRastreio || pedido.numeroRastreio)}
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-4 p-3 bg-white rounded-lg">
+                    <span className="text-primary font-semibold min-w-[200px] text-sm">
+                      Data da Solicitação:
+                    </span>
+                    <span className="text-sm">
+                      {formatarDataCompleta(pedido.dataSolicitacao || pedido.dataSolicitacao)}
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-4 p-3 bg-white rounded-lg">
+                    <span className="text-primary font-semibold min-w-[200px] text-sm">
+                      Status de Processamento:
+                    </span>
+                    <Badge
+                      className={`${getStatusColor(
+                        pedido.status
+                      )} hover:opacity-90 text-white`}
+                    >
+                      {exibirValor(pedido.status).replace("_", " ")}
+                    </Badge>
+                  </div>
+                  <div className="flex items-start gap-4 p-3 bg-white rounded-lg">
+                    <span className="text-primary font-semibold min-w-[200px] text-sm">
+                      Previsão de Despacho:
+                    </span>
+                    <span className="text-sm">
+                      {formatarData(pedido.previsaoDespacho)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Request Details */}
-              <div className="bg-primary text-primary-foreground rounded-t-lg p-4 mb-4">
-                <h2 className="font-bold">DETALHES DO INSUMO</h2>
+              <div className="bg-primary text-primary-foreground rounded-t-lg p-4 mb-0">
+                <h2 className="font-bold text-lg">DETALHES DO INSUMO</h2>
               </div>
-              <div className="bg-[hsl(var(--light-green))] p-6 rounded-b-lg mb-8 space-y-2">
-                <p>
-                  <span className="text-primary font-semibold">
+              <div className="bg-[hsl(var(--light-green))] p-6 rounded-b-lg mb-8 space-y-4 border-x-2 border-b-2 border-primary/20">
+                <div className="flex items-start gap-4 pb-3 border-b border-gray-200">
+                  <span className="text-primary font-semibold min-w-[180px] text-sm">
                     Cultura Solicitada:
-                  </span>{" "}
-                  {pedido.cultura} ({pedido.variedade})
-                </p>
-                <p>
-                  <span className="text-primary font-semibold">
+                  </span>
+                  <span className="text-sm font-medium">
+                    {exibirValor(pedido.cultura)} ({exibirValor(pedido.variedade)})
+                  </span>
+                </div>
+                <div className="flex items-start gap-4 pb-3 border-b border-gray-200">
+                  <span className="text-primary font-semibold min-w-[180px] text-sm">
                     Quantidade:
-                  </span>{" "}
-                  {pedido.quantidade} {pedido.unidade}
-                </p>
-                <p>
-                  <span className="text-primary font-semibold">
+                  </span>
+                  <span className="text-sm font-medium">
+                    {exibirValor(pedido.quantidade)} {exibirValor(pedido.unidade, "un")}
+                  </span>
+                </div>
+                <div className="flex items-start gap-4">
+                  <span className="text-primary font-semibold min-w-[180px] text-sm">
                     Status de Estoque:
-                  </span>{" "}
+                  </span>
                   <Badge
                     variant={
                       pedido.statusEstoque === "DISPONIVEL"
                         ? "default"
                         : "destructive"
                     }
+                    className="text-xs"
                   >
-                    {pedido.statusEstoque}
+                    {exibirValor(pedido.statusEstoque)}
                   </Badge>
-                </p>
+                </div>
               </div>
 
               {/* Logistics */}
-              <div className="bg-primary text-primary-foreground rounded-t-lg p-4 mb-4">
-                <h2 className="font-bold">LOCAL DE RETIRADA / ENTREGA</h2>
+              <div className="bg-primary text-primary-foreground rounded-t-lg p-4 mb-0">
+                <h2 className="font-bold text-lg">LOCAL DE RETIRADA / ENTREGA</h2>
               </div>
-              <div className="bg-[hsl(var(--light-green))] p-6 rounded-b-lg mb-12 space-y-2">
-                <p>
-                  <span className="text-primary font-semibold">
+              <div className="bg-[hsl(var(--light-green))] p-6 rounded-b-lg mb-12 space-y-4 border-x-2 border-b-2 border-primary/20">
+                <div className="flex items-start gap-4 pb-3 border-b border-gray-200">
+                  <span className="text-primary font-semibold min-w-[200px] text-sm">
                     Produtor/Destinatário:
-                  </span>{" "}
-                  {pedido.produtor}
-                </p>
-                <p>
-                  <span className="text-primary font-semibold">Endereço:</span>{" "}
-                  {pedido.enderecoEntrega}
-                </p>
-                <p>
-                  <span className="text-primary font-semibold">Município:</span>{" "}
-                  {pedido.municipio}
-                </p>
-                <p>
-                  <span className="text-primary font-semibold">
+                  </span>
+                  <span className="text-sm font-medium">
+                    {exibirValor(
+                      pedido.produtor
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-start gap-4 pb-3 border-b border-gray-200">
+                  <span className="text-primary font-semibold min-w-[200px] text-sm">
+                    Endereço:
+                  </span>
+                  <span className="text-sm">
+                    {exibirValor(pedido.enderecoEntrega || pedido.enderecoEntrega)}
+                  </span>
+                </div>
+                <div className="flex items-start gap-4 pb-3 border-b border-gray-200">
+                  <span className="text-primary font-semibold min-w-[200px] text-sm">
+                    Município:
+                  </span>
+                  <span className="text-sm">
+                    {exibirValor(pedido.municipio || pedido.municipio)}
+                  </span>
+                </div>
+                <div className="flex items-start gap-4">
+                  <span className="text-primary font-semibold min-w-[200px] text-sm">
                     Prazo Final:
-                  </span>{" "}
-                  {new Date(pedido.prazoFinal).toLocaleDateString("pt-BR")}
-                </p>
+                  </span>
+                  <span className="text-sm">
+                    {formatarData(pedido.prazoFinal)}
+                  </span>
+                </div>
               </div>
 
               {/* Progress Timeline */}
-              <div className="relative">
-                {pedido.etapas.map((etapa, index) => {
-                  const Icon = trackingIcons[index] || CheckCircle;
-                  return (
-                    <div
-                      key={index}
-                      className="flex items-start gap-4 mb-8 relative"
-                    >
-                      {index < pedido.etapas.length - 1 && (
-                        <div className="absolute left-6 top-12 w-0.5 h-16 bg-border"></div>
-                      )}
-                      <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          etapa.concluida ? "bg-primary" : "bg-muted"
-                        }`}
-                      >
-                        <Icon
-                          className={`w-6 h-6 ${
-                            etapa.concluida
-                              ? "text-primary-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                        />
-                      </div>
-                      <div className="pt-2">
-                        <p
-                          className={`font-semibold ${
-                            etapa.concluida
-                              ? "text-primary"
-                              : "text-muted-foreground"
-                          }`}
+              {pedido.etapas && pedido.etapas.length > 0 && (
+                <div className="bg-white p-6 rounded-lg border-2 border-primary/20">
+                  <h2 className="text-xl font-bold text-primary mb-6">
+                    Linha do Tempo do Rastreamento
+                  </h2>
+                  <div className="relative">
+                    {pedido.etapas.map((etapa, index) => {
+                      const Icon = trackingIcons[index] || CheckCircle;
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-start gap-4 mb-8 relative"
                         >
-                          {etapa.nome}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {etapa.descricao}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                          {index < pedido.etapas.length - 1 && (
+                            <div
+                              className={`absolute left-6 top-12 w-0.5 h-16 ${
+                                etapa.concluida ? "bg-primary" : "bg-border"
+                              }`}
+                            ></div>
+                          )}
+                          <div
+                            className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all ${
+                              etapa.concluida
+                                ? "bg-primary border-primary"
+                                : "bg-muted border-border"
+                            }`}
+                          >
+                            <Icon
+                              className={`w-6 h-6 ${
+                                etapa.concluida
+                                  ? "text-primary-foreground"
+                                  : "text-muted-foreground"
+                              }`}
+                            />
+                          </div>
+                          <div className="pt-2 flex-1">
+                            <p
+                              className={`font-semibold text-lg ${
+                                etapa.concluida
+                                  ? "text-primary"
+                                  : "text-muted-foreground"
+                              }`}
+                            >
+                              {etapa.nome}
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {etapa.descricao}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -573,24 +693,9 @@ const Rastreamento = () => {
           {!pedido && !loading && !error && (
             <div className="text-center py-12 text-muted-foreground">
               <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
-              <p className="text-lg mb-2">
+              <p className="text-lg mb-2 font-semibold">
                 Digite um código de rastreamento para começar
               </p>
-              <p className="text-sm">
-                Você pode testar com os códigos de exemplo do banco de dados:
-              </p>
-              <div className="mt-4 space-y-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setCodigoBusca("SAFRA-2025-A1B2C3D4");
-                    buscarPedido("SAFRA-2025-A1B2C3D4");
-                  }}
-                >
-                  Testar: SAFRA-2025-A1B2C3D4
-                </Button>
-              </div>
             </div>
           )}
         </div>

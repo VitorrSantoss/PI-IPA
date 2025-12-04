@@ -20,4 +20,7 @@ public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> 
   Optional<Solicitacao> findByPedidoId(Long pedidoId);
 
   List<Solicitacao> findByStatusOrderByDataCriacaoDesc(String status);
+
+  // ✅ NOVO: Buscar por código de rastreio
+  Optional<Solicitacao> findByCodigoRastreio(String codigoRastreio);
 }
