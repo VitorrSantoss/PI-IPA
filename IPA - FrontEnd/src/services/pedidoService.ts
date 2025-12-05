@@ -56,6 +56,32 @@ const API_BASE_URL = "http://localhost:8080/api";
 
 class PedidoService {
   /**
+   * Busca o token do localStorage
+   */
+  private getAuthToken(): string | null {
+    return localStorage.getItem("safra_token");
+  }
+
+  /**
+   * Monta os headers com autenticação se disponível
+   */
+  private getHeaders(includeAuth: boolean = false): HeadersInit {
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    };
+
+    if (includeAuth) {
+      const token = this.getAuthToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+
+    return headers;
+  }
+
+  /**
    * Rastreia um pedido pelo código de rastreamento
    * @param codigoRastreio - Código único do pedido (ex: SAFRA-2025-A1B2C3D4)
    * @returns Promise com os dados do pedido
@@ -64,20 +90,30 @@ class PedidoService {
     try {
       console.log(`🔍 Buscando pedido: ${codigoRastreio}`);
       
-      const response = await fetch(
+      // ✅ Primeiro tenta sem autenticação (para acesso público)
+      let response = await fetch(
         `${API_BASE_URL}/solicitacoes/rastrear/${codigoRastreio}`,
         {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-          },
+          headers: this.getHeaders(false), // Sem token
         }
       );
 
+      // ✅ Se der 403, tenta com autenticação
+      if (response.status === 403) {
+        console.log("⚠️ Acesso negado, tentando com autenticação...");
+        response = await fetch(
+          `${API_BASE_URL}/solicitacoes/rastrear/${codigoRastreio}`,
+          {
+            method: "GET",
+            headers: this.getHeaders(true), // Com token
+          }
+        );
+      }
+
       console.log(`📡 Status da resposta: ${response.status}`);
 
-      // CORREÇÃO: Aceitar tanto 200 quanto 201 como sucesso
+      // Aceitar 200 e 201 como sucesso
       if (response.ok || response.status === 201) {
         const data = await response.json();
         console.log("✅ Dados recebidos:", data);
@@ -91,6 +127,10 @@ class PedidoService {
       // Tratamento de erros específicos
       if (response.status === 404) {
         throw new Error("Pedido não encontrado. Verifique o código de rastreamento.");
+      }
+
+      if (response.status === 403) {
+        throw new Error("Acesso negado. Faça login para rastrear pedidos.");
       }
 
       if (response.status === 500) {
@@ -108,10 +148,7 @@ class PedidoService {
 
       // Se for um erro de rede
       if (error instanceof TypeError && error.message.includes("fetch")) {
-        throw {
-          message: "Não foi possível conectar ao servidor. Verifique se o backend está rodando.",
-          request: true,
-        };
+        throw new Error("Não foi possível conectar ao servidor. Verifique se o backend está rodando.");
       }
 
       // Re-lançar o erro para ser tratado no componente
@@ -120,15 +157,13 @@ class PedidoService {
   }
 
   /**
-   * Lista todos os pedidos (para uso futuro)
+   * Lista todos os pedidos (requer autenticação)
    */
   async listarTodos(): Promise<ApiResponse<Pedido[]>> {
     try {
       const response = await fetch(`${API_BASE_URL}/solicitacoes`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: this.getHeaders(true), // Com autenticação
       });
 
       if (response.ok || response.status === 201) {
@@ -147,15 +182,13 @@ class PedidoService {
   }
 
   /**
-   * Busca pedido por ID (para uso futuro)
+   * Busca pedido por ID (requer autenticação)
    */
   async buscarPorId(id: number): Promise<ApiResponse<Pedido>> {
     try {
       const response = await fetch(`${API_BASE_URL}/solicitacoes/${id}`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: this.getHeaders(true), // Com autenticação
       });
 
       if (response.ok || response.status === 201) {

@@ -19,7 +19,7 @@ import DadosAgricultor from "./pages/solicitar/DadosAgricultor";
 import DetalhesInsumo from "./pages/solicitar/DetalhesInsumo";
 import Logistica from "./pages/solicitar/Logistica";
 import Resumo from "./pages/solicitar/Resumo";
-import Sucesso from "./pages/Sucesso";
+import Sucesso from "./pages/Sucesso"; // ✅ Corrigir se estiver em ./pages/solicitar/Sucesso
 import Contato from "./pages/Contato";
 import Projeto from "./pages/Projeto";
 import Beneficiarios from "./pages/Beneficiarios";
@@ -49,7 +49,7 @@ export default function App() {
             <Route path="/sustentabilidade" element={<Sustentabilidade />} />
             <Route path="/ajuda" element={<Ajuda />} />
 
-            {/* ROTAS PROTEGIDAS */}
+            {/* ROTAS PROTEGIDAS - Solicitação */}
             <Route
               path="/solicitar/dados-agricultor"
               element={
@@ -79,6 +79,16 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Resumo />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* ✅ ROTA DE SUCESSO - ADICIONADA */}
+            <Route
+              path="/sucesso"
+              element={
+                <ProtectedRoute>
+                  <Sucesso />
                 </ProtectedRoute>
               }
             />

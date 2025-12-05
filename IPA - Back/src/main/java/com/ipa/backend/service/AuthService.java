@@ -55,20 +55,59 @@ public class AuthService {
      * Autenticar usuário (login)
      */
     public UsuarioIpa autenticarUsuario(String cpf, String senha) {
-        // Limpar CPF
-        String cpfLimpo = cpf.replaceAll("[^0-9]", "");
-        
-        // Buscar usuário por CPF
-        UsuarioIpa usuario = usuarioIpaRepository.findByCpf(cpfLimpo)
-                .orElseThrow(() -> new RuntimeException("CPF ou senha incorretos"));
+    // Limpar CPF
+    String cpfLimpo = cpf.replaceAll("[^0-9]", "");
+    
+    System.out.println("=================================");
+    System.out.println("🔐 AUTENTICAÇÃO");
+    System.out.println("📥 CPF recebido: [" + cpf + "]");
+    System.out.println("🧹 CPF limpo: [" + cpfLimpo + "]");
+    System.out.println("🔑 Senha recebida: [" + senha + "]");
+    System.out.println("=================================");
+    
+    // Buscar usuário por CPF
+    UsuarioIpa usuario = usuarioIpaRepository.findByCpf(cpfLimpo)
+            .orElseThrow(() -> {
+                System.out.println("❌ ERRO: Usuário não encontrado com CPF: [" + cpfLimpo + "]");
+                return new RuntimeException("CPF ou senha incorretos");
+            });
 
-        // Verificar senha
-        if (!passwordEncoder.matches(senha, usuario.getSenha())) {
+    System.out.println("✅ Usuário encontrado!");
+    System.out.println("👤 Nome: " + usuario.getNome());
+    System.out.println("📧 Email: " + usuario.getEmail());
+    System.out.println("🔑 Senha no banco: [" + usuario.getSenha() + "]"); // ✅ Mostrar senha completa
+    System.out.println("🔑 Tamanho da senha no banco: " + usuario.getSenha().length() + " chars");
+
+    // Verificar se a senha está criptografada
+    boolean isSenhaCriptografada = usuario.getSenha().startsWith("$2a$") || usuario.getSenha().startsWith("$2b$");
+    System.out.println("🔒 Senha está criptografada com BCrypt? " + isSenhaCriptografada);
+
+    // Verificar senha
+    if (isSenhaCriptografada) {
+        System.out.println("🔒 Verificando com BCrypt...");
+        boolean senhaCorreta = passwordEncoder.matches(senha, usuario.getSenha());
+        System.out.println("🔒 Resultado: " + (senhaCorreta ? "✅ SENHA CORRETA" : "❌ SENHA INCORRETA"));
+        
+        if (!senhaCorreta) {
             throw new RuntimeException("CPF ou senha incorretos");
         }
-
-        return usuario;
+    } else {
+        System.out.println("⚠️ Comparação direta (senha em texto plano)");
+        System.out.println("🔍 Senha banco: [" + usuario.getSenha() + "]");
+        System.out.println("🔍 Senha digitada: [" + senha + "]");
+        boolean senhaCorreta = usuario.getSenha().equals(senha);
+        System.out.println("🔍 Resultado: " + (senhaCorreta ? "✅ SENHA CORRETA" : "❌ SENHA INCORRETA"));
+        
+        if (!senhaCorreta) {
+            throw new RuntimeException("CPF ou senha incorretos");
+        }
     }
+
+    System.out.println("✅ AUTENTICAÇÃO BEM-SUCEDIDA!");
+    System.out.println("=================================");
+
+    return usuario;
+}
 
     /**
      * Buscar usuário por CPF
