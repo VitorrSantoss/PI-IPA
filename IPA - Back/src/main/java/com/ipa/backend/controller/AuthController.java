@@ -1,67 +1,73 @@
 package com.ipa.backend.controller;
 
+import com.ipa.backend.config.JwtUtil;
 import com.ipa.backend.dto.LoginDTO;
-import com.ipa.backend.dto.UsuarioIpaDTO;
+import com.ipa.backend.dto.LoginResponseDTO;
+import com.ipa.backend.dto.UsuarioDTO;
+import com.ipa.backend.model.Usuario;
 import com.ipa.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(originPatterns = "*", allowCredentials = "true")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody UsuarioDTO usuarioDTO) {
+        try {
+            Usuario usuario = authService.registrarUsuario(usuarioDTO);
+            return ResponseEntity.ok().body(new Response("Usuário cadastrado com sucesso!", usuario));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new Response(e.getMessage(), null));
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
         try {
-            Map<String, Object> response = authService.authenticate(loginDTO);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        }
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody UsuarioIpaDTO usuarioDTO) {
-        try {
-            UsuarioIpaDTO novoUsuario = authService.register(usuarioDTO);
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Usuário cadastrado com sucesso!");
-            response.put("usuario", novoUsuario);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-        }
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Logout realizado com sucesso");
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/validate")
-    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
-        try {
-            boolean isValid = authService.validateToken(token);
-            Map<String, Boolean> response = new HashMap<>();
-            response.put("valid", isValid);
+            Usuario usuario = authService.autenticarUsuario(loginDTO.getCpf(), loginDTO.getSenha());
+            
+            // 🔑 Gerar token JWT
+            String token = jwtUtil.generateToken(usuario.getCpf());
+            
+            LoginResponseDTO response = new LoginResponseDTO(
+                token,
+                usuario,
+                "Login realizado com sucesso"
+            );
+            
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(false);
+            return ResponseEntity.status(401).body(new Response(e.getMessage(), null));
         }
+    }
+
+    // Classe auxiliar para respostas
+    static class Response {
+        private String message;
+        private Object data;
+
+        public Response(String message, Object data) {
+            this.message = message;
+            this.data = data;
+        }
+
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+        public Object getData() { return data; }
+        public void setData(Object data) { this.data = data; }
     }
 }
