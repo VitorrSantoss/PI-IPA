@@ -2,6 +2,10 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
+// ✅ Usar as MESMAS chaves do AuthContext
+const TOKEN_KEY = "safra_token";
+const USER_KEY = "safra_user";
+
 export interface LoginData {
   cpf: string;
   senha: string;
@@ -40,8 +44,14 @@ const authService = {
     const response = await axios.post(`${API_URL}/auth/login`, credentials);
 
     if (response.data.token) {
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("usuario", JSON.stringify(response.data.usuario));
+      // ✅ Usar as mesmas chaves do AuthContext
+      localStorage.setItem(TOKEN_KEY, response.data.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(response.data.usuario));
+      
+      console.log("✅ Dados salvos no localStorage:", {
+        token: response.data.token,
+        usuario: response.data.usuario
+      });
     }
 
     return response.data;
@@ -63,22 +73,28 @@ const authService = {
   },
 
   logout: () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("usuario");
+    // ✅ Limpar as mesmas chaves do AuthContext
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    console.log("👋 Logout realizado, localStorage limpo");
   },
 
   isAuthenticated: (): boolean => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem(TOKEN_KEY);
     return !!token;
   },
 
   getCurrentUser: () => {
-    const usuario = localStorage.getItem("usuario");
-    return usuario ? JSON.parse(usuario) : null;
+    const usuario = localStorage.getItem(USER_KEY);
+    const user = usuario ? JSON.parse(usuario) : null;
+    
+    console.log("🔍 getCurrentUser chamado:", user);
+    
+    return user;
   },
 
   getToken: (): string | null => {
-    return localStorage.getItem("token");
+    return localStorage.getItem(TOKEN_KEY);
   },
 
   validateToken: async (): Promise<boolean> => {

@@ -110,11 +110,14 @@ const Rastreamento = () => {
         // Log detalhado dos dados recebidos
         console.log("📋 Campos recebidos:", {
           numeroRastreio: response.data.numeroRastreio,
+          codigoRastreio: response.data.codigoRastreio,
           dataSolicitacao: response.data.dataSolicitacao,
+          dataAtualizacao: response.data.dataAtualizacao,
           previsaoDespacho: response.data.previsaoDespacho,
           prazoFinal: response.data.prazoFinal,
           produtor: response.data.produtor,
-          // beneficiarioNome: response.data.beneficiarioNome, // Removido pois não existe na tipagem Pedido
+          beneficiarioNome: response.data.beneficiarioNome,
+          solicitanteNome: response.data.solicitanteNome,
         });
 
         setPedido(response.data);
@@ -208,11 +211,11 @@ const Rastreamento = () => {
       const infoGeral = [
         { 
           label: "Número de Rastreio:", 
-          value: exibirValor(pedido.numeroRastreio || pedido.numeroRastreio)
+          value: exibirValor(pedido.numeroRastreio || pedido.codigoRastreio)
         },
         {
           label: "Data da Solicitação:",
-          value: formatarData(pedido.dataSolicitacao || pedido.dataSolicitacao),
+          value: formatarData(pedido.dataSolicitacao || pedido.dataAtualizacao),
         },
         { label: "Status:", value: exibirValor(pedido.status).replace("_", " ") },
         {
@@ -287,16 +290,17 @@ const Rastreamento = () => {
           label: "Produtor/Destinatário:", 
           value: exibirValor(
             pedido.produtor || 
-            pedido.produtor
+            pedido.beneficiarioNome || 
+            pedido.solicitanteNome
           )
         },
         { 
           label: "Endereço:", 
-          value: exibirValor(pedido.enderecoEntrega || pedido.enderecoEntrega) 
+          value: exibirValor(pedido.enderecoEntrega || pedido.localAtuacao) 
         },
         { 
           label: "Município:", 
-          value: exibirValor(pedido.municipio || pedido.municipio) 
+          value: exibirValor(pedido.municipio || pedido.municipioDestino) 
         },
         {
           label: "Prazo Final:",
@@ -371,7 +375,7 @@ const Rastreamento = () => {
       );
 
       // Salvar PDF
-      const numeroRastreio = pedido.numeroRastreio || pedido.numeroRastreio || "SemCodigo";
+      const numeroRastreio = pedido.numeroRastreio || pedido.codigoRastreio || "SemCodigo";
       doc.save(`Rastreamento_${numeroRastreio}.pdf`);
       setGerandoPDF(false);
     } catch (err) {
@@ -409,7 +413,7 @@ const Rastreamento = () => {
         <div className="relative z-10 text-center text-primary-foreground px-6">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             Rastreamento de Insumos
-            {pedido && ` - Nº ${exibirValor(pedido.numeroRastreio || pedido.numeroRastreio)}`}
+            {pedido && ` - Nº ${exibirValor(pedido.numeroRastreio || pedido.codigoRastreio)}`}
           </h1>
           <p className="text-lg">
             Acompanhe a logística, o status de fiscalização e o trajeto
@@ -442,7 +446,7 @@ const Rastreamento = () => {
               </Button>
             </div>
             <p className="text-sm text-muted-foreground mt-2">
-              Exemplo: SAFRA-2025-9JV1Q012
+              Exemplo: SAFRA-2025-F2QYAVLO
             </p>
           </form>
 
@@ -506,29 +510,31 @@ const Rastreamento = () => {
               </div>
 
               {/* Status Overview */}
-              <div className="mb-8 bg-gradient-to-br from-green-50 to-white p-6 rounded-lg border-2 border-primary/20 shadow-sm">
-                <h2 className="text-2xl font-bold text-primary mb-6 flex items-center gap-2">
-                  <Package className="w-6 h-6" />
-                  Informações da Solicitação
-                </h2>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-4 p-3 bg-white rounded-lg">
+              <div className="mb-8">
+                <div className="bg-primary text-primary-foreground rounded-t-lg p-4 mb-0">
+                  <h2 className="font-bold text-lg flex items-center gap-2">
+                    <Package className="w-5 h-5" />
+                    INFORMAÇÕES DA SOLICITAÇÃO
+                  </h2>
+                </div>
+                <div className="bg-[hsl(var(--light-green))] p-6 rounded-b-lg space-y-4 border-x-2 border-b-2 border-primary/20">
+                  <div className="flex items-start gap-4 pb-3 border-b border-gray-200">
                     <span className="text-primary font-semibold min-w-[200px] text-sm">
                       Número de Rastreio:
                     </span>
-                    <span className="font-mono bg-gray-100 px-4 py-2 rounded border border-gray-300 text-sm font-semibold">
-                      {exibirValor(pedido.numeroRastreio || pedido.numeroRastreio)}
+                    <span className="font-mono bg-primary/10 px-4 py-2 rounded-lg border-2 border-primary text-sm font-bold text-primary">
+                      {exibirValor(pedido.numeroRastreio || pedido.codigoRastreio)}
                     </span>
                   </div>
-                  <div className="flex items-start gap-4 p-3 bg-white rounded-lg">
+                  <div className="flex items-start gap-4 pb-3 border-b border-gray-200">
                     <span className="text-primary font-semibold min-w-[200px] text-sm">
                       Data da Solicitação:
                     </span>
                     <span className="text-sm">
-                      {formatarDataCompleta(pedido.dataSolicitacao || pedido.dataSolicitacao)}
+                      {formatarDataCompleta(pedido.dataSolicitacao || pedido.dataAtualizacao)}
                     </span>
                   </div>
-                  <div className="flex items-start gap-4 p-3 bg-white rounded-lg">
+                  <div className="flex items-start gap-4 pb-3 border-b border-gray-200">
                     <span className="text-primary font-semibold min-w-[200px] text-sm">
                       Status de Processamento:
                     </span>
@@ -540,7 +546,7 @@ const Rastreamento = () => {
                       {exibirValor(pedido.status).replace("_", " ")}
                     </Badge>
                   </div>
-                  <div className="flex items-start gap-4 p-3 bg-white rounded-lg">
+                  <div className="flex items-start gap-4">
                     <span className="text-primary font-semibold min-w-[200px] text-sm">
                       Previsão de Despacho:
                     </span>
@@ -600,7 +606,9 @@ const Rastreamento = () => {
                   </span>
                   <span className="text-sm font-medium">
                     {exibirValor(
-                      pedido.produtor
+                      pedido.produtor || 
+                      pedido.beneficiarioNome || 
+                      pedido.solicitanteNome
                     )}
                   </span>
                 </div>
@@ -609,7 +617,7 @@ const Rastreamento = () => {
                     Endereço:
                   </span>
                   <span className="text-sm">
-                    {exibirValor(pedido.enderecoEntrega || pedido.enderecoEntrega)}
+                    {exibirValor(pedido.enderecoEntrega || pedido.localAtuacao)}
                   </span>
                 </div>
                 <div className="flex items-start gap-4 pb-3 border-b border-gray-200">
@@ -617,7 +625,7 @@ const Rastreamento = () => {
                     Município:
                   </span>
                   <span className="text-sm">
-                    {exibirValor(pedido.municipio || pedido.municipio)}
+                    {exibirValor(pedido.municipio || pedido.municipioDestino)}
                   </span>
                 </div>
                 <div className="flex items-start gap-4">

@@ -1,9 +1,16 @@
+// App.tsx
+import { Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import ProtectedRoute from "@/components/ProtectedRoute";
+
+// Providers
 import { SolicitacaoProvider } from "./pages/solicitar/SolicitacaoContext";
+
+// Páginas
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Registro";
@@ -22,34 +29,65 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <SolicitacaoProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SolicitacaoProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+
           <Routes>
+            {/* Rotas públicas */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Register />} />
             <Route path="/rastreamento" element={<Rastreamento />} />
-            <Route path="/solicitar/dados-agricultor" element={<DadosAgricultor />} />
-            <Route path="/solicitar/detalhes" element={<DetalhesInsumo />} />
-            <Route path="/solicitar/logistica" element={<Logistica />} />
-            <Route path="/solicitar/resumo" element={<Resumo />} />
-            <Route path="/sucesso" element={<Sucesso />} />
             <Route path="/contato" element={<Contato />} />
             <Route path="/projeto" element={<Projeto />} />
             <Route path="/projeto/beneficiarios" element={<Beneficiarios />} />
             <Route path="/sustentabilidade" element={<Sustentabilidade />} />
             <Route path="/ajuda" element={<Ajuda />} />
+
+            {/* ROTAS PROTEGIDAS */}
+            <Route
+              path="/solicitar/dados-agricultor"
+              element={
+                <ProtectedRoute>
+                  <DadosAgricultor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/solicitar/detalhes"
+              element={
+                <ProtectedRoute>
+                  <DetalhesInsumo />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/solicitar/logistica"
+              element={
+                <ProtectedRoute>
+                  <Logistica />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/solicitar/resumo"
+              element={
+                <ProtectedRoute>
+                  <Resumo />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </SolicitacaoProvider>
-  </QueryClientProvider>
-);
-
-export default App;
+        </TooltipProvider>
+      </SolicitacaoProvider>
+    </QueryClientProvider>
+  );
+}

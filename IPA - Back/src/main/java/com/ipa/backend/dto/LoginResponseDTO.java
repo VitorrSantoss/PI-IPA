@@ -1,16 +1,16 @@
 package com.ipa.backend.dto;
 
-import com.ipa.backend.model.Usuario;
+import com.ipa.backend.model.UsuarioIpa;
 
 public class LoginResponseDTO {
     
     private String token;
-    private Usuario usuario;
+    private UsuarioIpa usuario;
     private String message;
 
     public LoginResponseDTO() {}
 
-    public LoginResponseDTO(String token, Usuario usuario, String message) {
+    public LoginResponseDTO(String token, UsuarioIpa usuario, String message) {
         this.token = token;
         this.usuario = usuario;
         this.message = message;
@@ -25,11 +25,11 @@ public class LoginResponseDTO {
         this.token = token;
     }
 
-    public Usuario getUsuario() {
+    public UsuarioIpa getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(Usuario usuario) {
+    public void setUsuario(UsuarioIpa usuario) {
         this.usuario = usuario;
     }
 

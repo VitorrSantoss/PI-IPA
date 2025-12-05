@@ -7,20 +7,44 @@ export interface Etapa {
 }
 
 export interface Pedido {
-  numeroRastreio: string;
-  dataSolicitacao: string;
+  // Identificadores
+  id?: number;
+  numeroRastreio?: string;
+  codigoRastreio?: string;
+  
+  // Datas
+  dataSolicitacao?: string;
+  dataAtualizacao?: string;
+  previsaoDespacho?: string;
+  prazoFinal?: string;
+  
+  // Status
   status: string;
-  previsaoDespacho: string;
-  cultura: string;
-  variedade: string;
-  quantidade: number;
-  unidade: string;
-  statusEstoque: string;
-  produtor: string;
-  enderecoEntrega: string;
-  municipio: string;
-  prazoFinal: string;
-  etapas: Etapa[];
+  statusEstoque?: string;
+  
+  // Insumo
+  cultura?: string;
+  variedade?: string;
+  tipoInsumo?: string;
+  quantidade?: number;
+  unidade?: string;
+  
+  // Pessoas
+  produtor?: string;
+  beneficiarioNome?: string;
+  beneficiarioCpf?: string;
+  beneficiarioCaf?: string;
+  solicitanteNome?: string;
+  nomeFicticioCpl?: string;
+  
+  // Localização
+  enderecoEntrega?: string;
+  municipio?: string;
+  municipioDestino?: string;
+  localAtuacao?: string;
+  
+  // Etapas
+  etapas?: Etapa[];
 }
 
 export interface ApiResponse<T> {

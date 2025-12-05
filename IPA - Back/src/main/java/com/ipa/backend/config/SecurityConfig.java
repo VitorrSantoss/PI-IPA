@@ -12,6 +12,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.Arrays;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -22,13 +24,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // ✅ Configuração CORS
+                // ✅ Configuração CORS completa
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.addAllowedOrigin("http://localhost:5173");
+                    config.addAllowedOriginPattern("http://localhost:5173");
+                    config.addAllowedOriginPattern("http://localhost:3000");
                     config.addAllowedMethod("*");
                     config.addAllowedHeader("*");
                     config.setAllowCredentials(true);
+                    config.setMaxAge(3600L);
                     return config;
                 }))
                 
@@ -38,9 +42,10 @@ public class SecurityConfig {
                 // ✅ Configurar autorização de endpoints
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/login",
-                                "/api/auth/register",
-                                "/v3/api-docs/**",
+                                "/api/auth/**",           // Libera TODOS os endpoints de autenticação
+                                "/api/health",            // Health check
+                                "/api/test",              // Endpoint de teste
+                                "/v3/api-docs/**",        // Swagger
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
@@ -52,7 +57,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 
-                // 🔑 ADICIONAR O FILTRO JWT ANTES DO UsernamePasswordAuthenticationFilter
+                // 🔑 Adicionar o filtro JWT
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
