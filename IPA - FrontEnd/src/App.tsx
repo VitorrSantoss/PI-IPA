@@ -19,13 +19,14 @@ import DadosAgricultor from "./pages/solicitar/DadosAgricultor";
 import DetalhesInsumo from "./pages/solicitar/DetalhesInsumo";
 import Logistica from "./pages/solicitar/Logistica";
 import Resumo from "./pages/solicitar/Resumo";
-import Sucesso from "./pages/Sucesso"; // ✅ Corrigir se estiver em ./pages/solicitar/Sucesso
+import Sucesso from "./pages/Sucesso";
 import Contato from "./pages/Contato";
 import Projeto from "./pages/Projeto";
 import Beneficiarios from "./pages/Beneficiarios";
 import Sustentabilidade from "./pages/Sustentabilidade";
 import Ajuda from "./pages/Ajuda";
 import NotFound from "./pages/NotFound";
+import GerenciarSementes from "./pages/admin/GerenciarSementes";
 
 const queryClient = new QueryClient();
 
@@ -83,12 +84,22 @@ export default function App() {
               }
             />
             
-            {/* ✅ ROTA DE SUCESSO - ADICIONADA */}
+            {/* Rota de Sucesso */}
             <Route
               path="/sucesso"
               element={
                 <ProtectedRoute>
                   <Sucesso />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ROTAS DE ADMINISTRAÇÃO */}
+            <Route
+              path="/admin/sementes"
+              element={
+                <ProtectedRoute>
+                  <GerenciarSementes />
                 </ProtectedRoute>
               }
             />
