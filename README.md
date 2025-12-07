@@ -1,4 +1,4 @@
-# 🌱 S.A.F.R.A. - Sistema Automatizado de Fornecimento e Rastreamento Agrícola
+# 🌱 S.A.F.R.A. - *Sistema de Aquisição, Fiscalização e Rastreamento Agrícola*
 
 <div align="center">
 
