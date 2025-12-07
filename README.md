@@ -40,11 +40,11 @@ O **S.A.F.R.A.** é uma plataforma desenvolvida para modernizar e otimizar o pro
 ┌─────────────────────────────────────────────────────────────┐
 │                      Frontend (React)                       │
 │  ┌────────────┐  ┌────────────┐  ┌─────────────────────┐    │
-│  │  TypeScript │  │  Tailwind │  │  shadcn/ui + Radix  │    │
-│  │  + Vite     │  │  CSS      │  │  UI Components      │    │
+│  │ TypeScript │  │  Tailwind  │  │  shadcn/ui + Radix  │    │
+│  │  + Vite    │  │  CSS       │  │  UI Components      │    │
 │  └────────────┘  └────────────┘  └─────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
-                              ↕ REST API
+                         ↕ REST API
 ┌─────────────────────────────────────────────────────────────┐
 │                    Backend (Spring Boot)                    │
 │  ┌─────────────┐  ┌──────────────┐  ┌─────────────────┐     │
@@ -52,7 +52,7 @@ O **S.A.F.R.A.** é uma plataforma desenvolvida para modernizar e otimizar o pro
 │  │ 3.5.8       │  │ Security     │  │ BCrypt          │     │
 │  └─────────────┘  └──────────────┘  └─────────────────┘     │
 └─────────────────────────────────────────────────────────────┘
-                              ↕ JPA/Hibernate
+                       ↕ JPA/Hibernate
 ┌─────────────────────────────────────────────────────────────┐
 │                     Database (MySQL)                        │
 │  • Usuários IPA    • Beneficiários    • Solicitações        │
