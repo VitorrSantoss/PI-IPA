@@ -27,6 +27,7 @@ import Sustentabilidade from "./pages/Sustentabilidade";
 import Ajuda from "./pages/Ajuda";
 import NotFound from "./pages/NotFound";
 import GerenciarSementes from "./pages/admin/GerenciarSementes";
+import MinhasSolicitacoes from "./pages/MinhasSolicitacoes"; // ✅ NOVO
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,16 @@ export default function App() {
             <Route path="/projeto/beneficiarios" element={<Beneficiarios />} />
             <Route path="/sustentabilidade" element={<Sustentabilidade />} />
             <Route path="/ajuda" element={<Ajuda />} />
+
+            {/* ✅ NOVA ROTA: Minhas Solicitações */}
+            <Route
+              path="/minhas-solicitacoes"
+              element={
+                <ProtectedRoute>
+                  <MinhasSolicitacoes />
+                </ProtectedRoute>
+              }
+            />
 
             {/* ROTAS PROTEGIDAS - Solicitação */}
             <Route

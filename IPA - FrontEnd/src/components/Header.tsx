@@ -1,7 +1,7 @@
 // src/components/Header.tsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, LogOut, Settings } from "lucide-react";
+import { User, LogOut, FileText, Package } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
@@ -90,6 +90,26 @@ const Header = () => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                
+                {/* ✅ NOVO: Minhas Solicitações */}
+                <DropdownMenuItem
+                  onClick={() => navigate("/minhas-solicitacoes")}
+                  className="cursor-pointer focus:bg-primary/10"
+                >
+                  <Package className="mr-2 h-4 w-4" />
+                  <span>Minhas Solicitações</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => navigate("/rastreamento")}
+                  className="cursor-pointer focus:bg-primary/10"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span>Rastrear Pedido</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+                
                 <DropdownMenuItem
                   onClick={handleLogout}
                   className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
