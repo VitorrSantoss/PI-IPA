@@ -24,9 +24,13 @@ public class UsuarioIpa {
   @Column(length = 150, nullable = false)
   private String nome;
 
-  // ✅ Removida validação @CPF para permitir criação automática
-  @Column(nullable = false, unique = true, length = 14)
-  private String cpf;
+  @Column(nullable = false, unique = true, length = 11) // ✅ Agora 11 chars (sem formatação)
+private String cpf;
+
+// Método para garantir que CPF sempre seja salvo limpo
+public void setCpf(String cpf) {
+    this.cpf = cpf.replaceAll("[^0-9]", "");
+}
 
   @Column(length = 20)
   private String telefone;

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useSolicitacao } from "./SolicitacaoContext";
-import solicitacaoService from "@/services/solicitacaoservice";
+import { criarSolicitacao } from "@/services/solicitacaoservice";
 import { format } from "date-fns";
 
 const Resumo = () => {
@@ -29,12 +29,12 @@ const Resumo = () => {
       console.log("📤 Enviando solicitação:", dadosCompletos);
 
       // Enviar para o backend
-      const resultado = await solicitacaoService.criar(dadosCompletos as any);
+      const resultado = await criarSolicitacao(dadosCompletos as any);
 
       console.log("✅ Solicitação criada:", resultado);
 
       toast.success("Solicitação enviada com sucesso!", {
-        description: `ID: ${resultado.id}`,
+        description: "Solicitação enviada com sucesso.",
       });
 
       // Limpar contexto

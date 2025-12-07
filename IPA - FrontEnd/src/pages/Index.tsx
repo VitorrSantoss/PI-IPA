@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LogIn, Leaf, FileText, Phone } from "lucide-react";
+import { LogIn, Leaf, FileText, Phone, Settings } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import heroImage from "@/assets/hero-farm.jpg";
@@ -26,6 +26,12 @@ const Index = () => {
       icon: Phone,
       title: "Contato IPA",
       link: "/contato"
+    },
+    {
+      icon: Settings,
+      title: "Gerenciar Sementes",
+      link: "/admin/sementes",
+      admin: true // ✅ Marcador para destacar visualmente
     }
   ];
 
@@ -68,19 +74,26 @@ const Index = () => {
       <section className="py-12 px-6 relative" style={{ backgroundImage: `url(${heroImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
         <div className="absolute inset-0 bg-white/80"></div>
         <div className="max-w-6xl mx-auto relative z-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {actionCards.map((card, index) => {
               const Icon = card.icon;
               return (
                 <Link
                   key={index}
                   to={card.link}
-                  className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center gap-4 hover:shadow-xl transition-all hover:-translate-y-1"
+                  className={`bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center gap-4 hover:shadow-xl transition-all hover:-translate-y-1 ${
+                    card.admin ? 'ring-2 ring-primary' : ''
+                  }`}
                 >
-                  <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
-                    <Icon className="w-8 h-8 text-primary" />
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                    card.admin ? 'bg-primary' : 'bg-secondary'
+                  }`}>
+                    <Icon className={`w-8 h-8 ${card.admin ? 'text-white' : 'text-primary'}`} />
                   </div>
                   <p className="text-center font-medium text-foreground">{card.title}</p>
+                  {card.admin && (
+                    <span className="text-xs text-primary font-semibold">ADMIN</span>
+                  )}
                 </Link>
               );
             })}

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useSolicitacao } from "./SolicitacaoContext";
+import { sementeService, Semente } from "@/services/sementeServices";
 
 const DetalhesInsumo = () => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const DetalhesInsumo = () => {
   );
 
   const [formData, setFormData] = useState({
-    tipoInsumo: solicitacao.tipoInsumo || "SEMENTES",
+    tipoInsumo: solicitacao.tipoInsumo || "SEMENTE",
     cultura: solicitacao.cultura || "",
     quantidade: solicitacao.quantidade?.toString() || "",
     unidadeMedida: solicitacao.unidadeMedida || "KG",
@@ -32,9 +33,24 @@ const DetalhesInsumo = () => {
     finalidade: solicitacao.finalidade || "COMERCIAL"
   });
 
+  // ✅ Novos estados para sementes
+  const [sementes, setSementes] = useState<Semente[]>([]);
+  const [sementesFiltradas, setSementesFiltradas] = useState<Semente[]>([]);
+  const [loadingSementes, setLoadingSementes] = useState(false);
+
+  // ✅ Carregar sementes ao montar o componente
+  useEffect(() => {
+    carregarSementes();
+  }, []);
+
+  // ✅ Filtrar sementes quando tipo ou cultura mudar
+  useEffect(() => {
+    filtrarSementes();
+  }, [formData.tipoInsumo, formData.cultura, sementes]);
+
   useEffect(() => {
     setFormData({
-      tipoInsumo: solicitacao.tipoInsumo || "SEMENTES",
+      tipoInsumo: solicitacao.tipoInsumo || "SEMENTE",
       cultura: solicitacao.cultura || "",
       quantidade: solicitacao.quantidade?.toString() || "",
       unidadeMedida: solicitacao.unidadeMedida || "KG",
@@ -44,6 +60,49 @@ const DetalhesInsumo = () => {
       finalidade: solicitacao.finalidade || "COMERCIAL"
     });
   }, [solicitacao]);
+
+  const carregarSementes = async () => {
+    try {
+      setLoadingSementes(true);
+      const dados = await sementeService.listarAtivas();
+      setSementes(dados);
+    } catch (error: any) {
+      console.error("Erro ao carregar sementes:", error);
+      toast.error("Erro ao carregar sementes disponíveis");
+    } finally {
+      setLoadingSementes(false);
+    }
+  };
+
+  const filtrarSementes = () => {
+    let filtradas = sementes;
+
+    // Filtrar por tipo
+    if (formData.tipoInsumo) {
+      filtradas = filtradas.filter(s => s.tipo === formData.tipoInsumo);
+    }
+
+    // Filtrar por cultura
+    if (formData.cultura) {
+      filtradas = filtradas.filter(s => s.cultura === formData.cultura);
+    }
+
+    setSementesFiltradas(filtradas);
+  };
+
+  // ✅ Obter culturas únicas disponíveis
+  const culturasDisponiveis = Array.from(
+    new Set(
+      sementes
+        .filter(s => s.tipo === formData.tipoInsumo)
+        .map(s => s.cultura)
+    )
+  ).sort();
+
+  // ✅ Obter variedades disponíveis para a cultura selecionada
+  const variedadesDisponiveis = sementesFiltradas
+    .filter(s => s.variedade)
+    .map(s => ({ value: s.variedade!, label: s.variedade! }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,23 +144,35 @@ const DetalhesInsumo = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="SEMENTES">Sementes</SelectItem>
-                    <SelectItem value="MUDAS">Mudas</SelectItem>
+                    <SelectItem value="SEMENTE">Sementes</SelectItem>
+                    <SelectItem value="MUDA">Mudas</SelectItem>
+                    <SelectItem value="FERTILIZANTE">Fertilizante</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
                 <Label htmlFor="cultura">Cultura Desejada *</Label>
-                <Select value={formData.cultura} onValueChange={(value) => handleChange('cultura', value)}>
+                <Select 
+                  value={formData.cultura} 
+                  onValueChange={(value) => handleChange('cultura', value)}
+                  disabled={loadingSementes}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
+                    <SelectValue placeholder={loadingSementes ? "Carregando..." : "Selecione"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Milho">Milho</SelectItem>
-                    <SelectItem value="Feijão">Feijão</SelectItem>
-                    <SelectItem value="Mandioca">Mandioca</SelectItem>
-                    <SelectItem value="Tomate">Tomate</SelectItem>
+                    {culturasDisponiveis.length === 0 ? (
+                      <div className="py-6 text-center text-sm text-muted-foreground">
+                        Nenhuma cultura disponível
+                      </div>
+                    ) : (
+                      culturasDisponiveis.map(cultura => (
+                        <SelectItem key={cultura} value={cultura}>
+                          {cultura}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -128,6 +199,7 @@ const DetalhesInsumo = () => {
                     <SelectItem value="KG">Kg</SelectItem>
                     <SelectItem value="UNIDADE">Unidade</SelectItem>
                     <SelectItem value="SACO">Saco</SelectItem>
+                    <SelectItem value="LITRO">Litro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -160,12 +232,25 @@ const DetalhesInsumo = () => {
 
               <div>
                 <Label htmlFor="variedade">Variedade Específica</Label>
-                <Input
-                  id="variedade"
-                  placeholder="Ex: IPA-100, etc."
-                  value={formData.variedade}
-                  onChange={(e) => handleChange('variedade', e.target.value)}
-                />
+                <Select 
+                  value={formData.variedade} 
+                  onValueChange={(value) => {
+                    // ✅ Se selecionar "NENHUMA", limpa o campo
+                    handleChange('variedade', value === 'NENHUMA' ? '' : value);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NENHUMA">Nenhuma</SelectItem>
+                    {variedadesDisponiveis.map(v => (
+                      <SelectItem key={v.value} value={v.value}>
+                        {v.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>

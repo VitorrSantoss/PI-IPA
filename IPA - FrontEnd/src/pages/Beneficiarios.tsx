@@ -19,7 +19,7 @@ const Beneficiarios = () => {
       >
         <div className="absolute inset-0 bg-black/50"></div>
         <div className="relative z-10 text-center text-primary-foreground px-6">
-          <h1 className="text-4xl font-bold">Projeto S.A.F.R.A.</h1>
+          <h1 className="text-4xl font-bold">Nossos Parceiros</h1>
         </div>
       </section>
 

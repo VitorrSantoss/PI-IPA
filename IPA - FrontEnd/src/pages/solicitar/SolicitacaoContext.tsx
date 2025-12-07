@@ -1,6 +1,57 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { SolicitacaoDTO } from "@/services/solicitacaoservice";
 import authService from "@/services/authService";
+
+// ✅ Definir a interface localmente (não importar)
+export interface SolicitacaoDTO {
+  // IDs
+  id?: number;
+  solicitanteId?: number;
+  beneficiarioId?: number;
+
+  // Solicitante (Usuário IPA)
+  solicitanteNome?: string;
+  solicitanteCpf?: string;
+  solicitanteMatricula?: string;
+  solicitanteTelefone?: string;
+  localAtuacao?: string;
+
+  // Beneficiário (Agricultor)
+  beneficiarioNome?: string;
+  beneficiarioCpf?: string;
+  beneficiarioCaf?: string;
+  tipoPropriedade?: string;
+  beneficiarioCep?: string;
+  beneficiarioComplemento?: string;
+  pontoReferencia?: string;
+
+  // Insumo
+  tipoInsumo?: string;
+  cultura?: string;
+  variedade?: string;
+  quantidade?: number;
+  unidadeMedida?: string;
+  areaPlantada?: number;
+  areaUnidade?: string;
+  dataIdealPlantio?: string;
+  finalidade?: string;
+
+  // Logística
+  formaEntrega?: string;
+  municipioDestino?: string;
+  enderecoEntrega?: string;
+  cepEntrega?: string;
+  complementoEntrega?: string;
+  nomeDestinatario?: string;
+  telefoneDestinatario?: string;
+
+  // Controle
+  status?: string;
+  dataCriacao?: string;
+  dataAtualizacao?: string;
+  pedidoId?: string;
+  codigoRastreio?: string;
+  observacoes?: string;
+}
 
 interface SolicitacaoContextType {
   solicitacao: Partial<SolicitacaoDTO>;

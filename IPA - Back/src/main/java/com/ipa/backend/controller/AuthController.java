@@ -1,67 +1,84 @@
 package com.ipa.backend.controller;
 
+import com.ipa.backend.config.JwtUtil;
 import com.ipa.backend.dto.LoginDTO;
+import com.ipa.backend.dto.LoginResponseDTO;
 import com.ipa.backend.dto.UsuarioIpaDTO;
+import com.ipa.backend.model.UsuarioIpa;
 import com.ipa.backend.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 public class AuthController {
 
     @Autowired
     private AuthService authService;
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
-        try {
-            Map<String, Object> response = authService.authenticate(loginDTO);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-        }
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UsuarioIpaDTO usuarioDTO) {
+        System.out.println("📝 Tentativa de registro - CPF: " + usuarioDTO.getCpf());
+        
         try {
-            UsuarioIpaDTO novoUsuario = authService.register(usuarioDTO);
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", "Usuário cadastrado com sucesso!");
-            response.put("usuario", novoUsuario);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            UsuarioIpa usuario = authService.registrarUsuario(usuarioDTO);
+            System.out.println("✅ Usuário registrado: " + usuario.getNome());
+            return ResponseEntity.ok().body(new Response("Usuário cadastrado com sucesso!", usuario));
+        } catch (Exception e) {
+            System.out.println("❌ Erro no registro: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new Response(e.getMessage(), null));
         }
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Logout realizado com sucesso");
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/validate")
-    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String token) {
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
+        System.out.println("🔐 Tentativa de login - CPF: " + loginDTO.getCpf());
+        
         try {
-            boolean isValid = authService.validateToken(token);
-            Map<String, Boolean> response = new HashMap<>();
-            response.put("valid", isValid);
+            UsuarioIpa usuario = authService.autenticarUsuario(loginDTO.getCpf(), loginDTO.getSenha());
+            
+            System.out.println("✅ Usuário autenticado: " + usuario.getNome());
+            
+            // 🔑 Gerar token JWT
+            String token = jwtUtil.generateToken(usuario.getCpf());
+            System.out.println("🎫 Token gerado: " + token.substring(0, 20) + "...");
+            
+            LoginResponseDTO response = new LoginResponseDTO(
+                token,
+                usuario,
+                "Login realizado com sucesso"
+            );
+            
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(false);
+            System.out.println("❌ Erro na autenticação: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(401).body(new Response(e.getMessage(), null));
         }
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<?> test() {
+        return ResponseEntity.ok().body(new Response("API Auth funcionando!", null));
+    }
+
+    // Classe auxiliar para respostas
+    static class Response {
+        private String message;
+        private Object data;
+
+        public Response(String message, Object data) {
+            this.message = message;
+            this.data = data;
+        }
+
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+        public Object getData() { return data; }
+        public void setData(Object data) { this.data = data; }
     }
 }

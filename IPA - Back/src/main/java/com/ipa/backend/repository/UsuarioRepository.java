@@ -8,13 +8,12 @@ import java.util.Optional;
 
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
-
-    // ✅ Método correto - retorna Optional<Usuario>
+    
     Optional<Usuario> findByCpf(String cpf);
-
-    // Método adicional para verificar existência
-    boolean existsByCpf(String cpf);
-
-    // Método para buscar por email
+    
     Optional<Usuario> findByEmail(String email);
+    
+    boolean existsByCpf(String cpf);
+    
+    boolean existsByEmail(String email);
 }

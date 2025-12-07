@@ -16,27 +16,13 @@ const DadosAgricultor = () => {
   // Estado para controlar edição
   const [modoEdicao, setModoEdicao] = useState(false);
 
-  // Carregar dados do usuário logado
-  useEffect(() => {
-    const usuarioLogado = authService.getCurrentUser();
-    if (usuarioLogado && !solicitacao.solicitanteNome) {
-      atualizarSolicitacao({
-        solicitanteNome: usuarioLogado.nome || "",
-        solicitanteCpf: usuarioLogado.cpf || "",
-        solicitanteMatricula: usuarioLogado.matriculaIpa || "",
-        solicitanteTelefone: usuarioLogado.telefone || "",
-        localAtuacao: usuarioLogado.localAtuacao || "",
-      });
-    }
-  }, []);
-
-  // Estado para dados do solicitante (editável)
+  // ✅ Carregar dados do usuário logado SEMPRE
   const [dadosSolicitante, setDadosSolicitante] = useState({
-    solicitanteNome: solicitacao.solicitanteNome || "",
-    solicitanteCpf: solicitacao.solicitanteCpf || "",
-    solicitanteMatricula: solicitacao.solicitanteMatricula || "",
-    solicitanteTelefone: solicitacao.solicitanteTelefone || "",
-    localAtuacao: solicitacao.localAtuacao || "",
+    solicitanteNome: "",
+    solicitanteCpf: "",
+    solicitanteMatricula: "",
+    solicitanteTelefone: "",
+    localAtuacao: "",
   });
 
   // Estado para dados do beneficiário
@@ -50,16 +36,32 @@ const DadosAgricultor = () => {
     pontoReferencia: solicitacao.pontoReferencia || "",
   });
 
-  // Atualizar quando o contexto mudar
+  // ✅ Sempre buscar dados do usuário logado ao montar o componente
   useEffect(() => {
-    setDadosSolicitante({
-      solicitanteNome: solicitacao.solicitanteNome || "",
-      solicitanteCpf: solicitacao.solicitanteCpf || "",
-      solicitanteMatricula: solicitacao.solicitanteMatricula || "",
-      solicitanteTelefone: solicitacao.solicitanteTelefone || "",
-      localAtuacao: solicitacao.localAtuacao || "",
-    });
+    const usuarioLogado = authService.getCurrentUser();
+    
+    if (usuarioLogado) {
+      const dadosUsuario = {
+        solicitanteNome: usuarioLogado.nome || "",
+        solicitanteCpf: usuarioLogado.cpf || "",
+        solicitanteMatricula: usuarioLogado.matriculaIpa || "",
+        solicitanteTelefone: usuarioLogado.telefone || "",
+        localAtuacao: usuarioLogado.localAtuacao || "",
+      };
 
+      // ✅ SEMPRE carregar do usuário logado (não do contexto)
+      setDadosSolicitante(dadosUsuario);
+      
+      // ✅ Atualizar contexto
+      atualizarSolicitacao(dadosUsuario);
+    } else {
+      toast.error("Usuário não autenticado. Faça login novamente.");
+      navigate("/login");
+    }
+  }, []); // ✅ Executar apenas uma vez ao montar
+
+  // Atualizar dados do beneficiário quando o contexto mudar
+  useEffect(() => {
     setFormData({
       beneficiarioNome: solicitacao.beneficiarioNome || "",
       beneficiarioCpf: solicitacao.beneficiarioCpf || "",
@@ -143,7 +145,8 @@ const DadosAgricultor = () => {
       <main className="flex-1 bg-white px-6 py-12">
         <div className="max-w-3xl mx-auto">
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* User Section */}
+            
+            {/* ✅ SOLICITANTE - Preenchido automaticamente do login, mas editável */}
             <div className="bg-muted/50 p-6 rounded-lg">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-foreground">
@@ -162,6 +165,7 @@ const DadosAgricultor = () => {
                   {modoEdicao ? "SALVAR" : "EDITAR"}
                 </Button>
               </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Nome completo *</Label>
@@ -178,11 +182,11 @@ const DadosAgricultor = () => {
                 <div>
                   <Label>CPF *</Label>
                   <Input
-                    value={dadosSolicitante.solicitanteCpf}
+                    value={formatCPF(dadosSolicitante.solicitanteCpf)}
                     onChange={(e) =>
                       handleChangeSolicitante(
                         "solicitanteCpf",
-                        formatCPF(e.target.value)
+                        e.target.value.replace(/\D/g, "")
                       )
                     }
                     disabled={!modoEdicao}
@@ -208,11 +212,11 @@ const DadosAgricultor = () => {
                 <div>
                   <Label>Telefone de contato *</Label>
                   <Input
-                    value={dadosSolicitante.solicitanteTelefone}
+                    value={formatPhone(dadosSolicitante.solicitanteTelefone)}
                     onChange={(e) =>
                       handleChangeSolicitante(
                         "solicitanteTelefone",
-                        formatPhone(e.target.value)
+                        e.target.value.replace(/\D/g, "")
                       )
                     }
                     disabled={!modoEdicao}
@@ -234,8 +238,16 @@ const DadosAgricultor = () => {
                   />
                 </div>
               </div>
+
+              {/* ✅ Aviso informativo */}
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800">
+                  ℹ️ Estes dados foram carregados do seu cadastro. Você pode editá-los apenas para esta solicitação.
+                </p>
+              </div>
             </div>
-            {/* Beneficiary Section */}
+
+            {/* ✅ BENEFICIÁRIO - EDITÁVEL */}
             <div>
               <h2 className="text-xl font-bold text-foreground mb-6">
                 DADOS DO AGRICULTOR BENEFICIADO
@@ -371,4 +383,5 @@ const DadosAgricultor = () => {
     </div>
   );
 };
+
 export default DadosAgricultor;
